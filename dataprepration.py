@@ -13,7 +13,7 @@ def videoiframeext(videopath, videoid, videoiframepath):
 def camvideosiframeext(campath, trgcampath):
     camvideonames = cfg.rm_ds(os.listdir(campath))
     cfg.create_dir(trgcampath)
-    for i, camvideoname in camvideonames:
+    for i, camvideoname in enumerate(camvideonames):
         camvideopath = os.path.join(campath, camvideoname)
         videoiframeext(videopath=camvideopath, videoid=i, videoiframepath=trgcampath)
 
