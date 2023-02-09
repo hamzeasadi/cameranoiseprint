@@ -25,6 +25,7 @@ def rm_ds(mylist:list):
         mylist.remove('.DS_Store')
     except Exception as e:
         print(e)
+    return mylist
 
 
 
