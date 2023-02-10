@@ -10,20 +10,22 @@ from torch.utils.data import Dataset, DataLoader
 import cv2
 
 
+# randomly select hi and wi
 def gethiwi(camname):
+    hi = int((1080-64)*random.random())
+    wi = int((1920-64)*random.random())
     if (camname == 'D40') or (camname == 'D41') or (camname == 'D42') or (camname == 'D43') or (camname == 'D44'):
-        hi = int((1080-364)*random.random() + 100)
-        wi = int((1920-64)*random.random())
-    else:
-        hi = int((1080-64)*random.random())
-        wi = int((1920-64)*random.random())
+        hi = max(200, min(hi, 1080-164))
+
     return hi, wi
 
+# extract a patch (green channel) of image in location hi, wi
 def patchtensorify(img, hi, wi):
     imgpatch = img[hi:hi+64, wi:wi+64, 1:2]
     imgpatch = (imgpatch - 127)/255.0
     return torch.from_numpy(imgpatch).permute(2, 0, 1)
 
+# extract patchprcam patchs from on random location, hi,wi, from a camera folder
 def getpatch(campath, camname, patchprcam):
     hi, wi = gethiwi(camname=camname)
     camiframes = cfg.rm_ds(os.listdir(campath))
@@ -37,7 +39,7 @@ def getpatch(campath, camname, patchprcam):
     
     return patchsample
 
-
+# extract a sample which contain numpatchs for each camera and location is each time different.
 def getdatasample(datadir, numpatchs):
     cams = cfg.rm_ds(os.listdir(datadir))
     firstpatch = getpatch(campath=os.path.join(datadir, cams[0]), camname=cams[0], patchprcam=numpatchs)
@@ -74,8 +76,10 @@ class VisionDataset(Dataset):
 
 def main():
     print(42)
-    x = VisionDataset(datapath=cfg.paths['train'], numcam=20, batch_size=200)
-    print(x.shape)
+    # x = VisionDataset(datapath=cfg.paths['train'], numcam=20, batch_size=200)
+    # print(x.shape)
+    for i in range(10):
+        print(gethiwi(f'D4{i}'))
 
 
 
