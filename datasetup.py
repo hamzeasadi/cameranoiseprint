@@ -78,10 +78,11 @@ class VisionDataset(Dataset):
 def main():
     print(42)
     # print(cfg.paths)
-    # x = VisionDataset(datapath=cfg.paths['iframes'], numcam=25, batch_size=200)
-   
-    for i in range(10):
-        print(gethiwi(f'D4{i}'))
+    X = VisionDataset(datapath=cfg.paths['train'], numcam=25, batch_size=200)
+    for x in X:
+        print(x.shape)
+    # for i in range(10):
+    #     print(gethiwi(f'D4{i}'))
 
 
 

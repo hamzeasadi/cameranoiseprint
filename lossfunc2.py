@@ -64,10 +64,14 @@ class SoftMLoss(nn.Module):
 def main():
     batch_size = 200
     stp = 5
-    x = torch.randn(size=(batch_size, 1, 64, 64))
-    myloss = SoftMLoss(batch_size=batch_size, framepercam=stp)
-    loss = myloss(x)
-    print(loss)
+    # x = torch.randn(size=(batch_size, 1, 64, 64))
+    # myloss = SoftMLoss(batch_size=batch_size, framepercam=stp)
+    # loss = myloss(x)
+    # print(loss)
+
+    tmp = distmtxidxlbl(batch_size=batch_size, frprcam=10)
+    print(tmp)
+    # print(len(tmp))
 
 
 if __name__ == '__main__':

@@ -68,9 +68,12 @@ def main():
     x = torch.randn(size=(200, 1, 64,64))
     # y = torch.randn(size=(3, 3))
     # xy = torch.cat((x.unsqueeze(dim=0), y.unsqueeze(dim=0)), dim=0).unsqueeze(dim=0)
-    onloss = OneClassBCE(num_cam=20, batch_size=200, reg=0, m1=10000, m2=10000)
-    loss = onloss(x)
-    print(loss.item())
+    # onloss = OneClassBCE(num_cam=20, batch_size=200, reg=0, m1=10000, m2=10000)
+    # loss = onloss(x)
+    # print(loss.item())
+    print(calc_labels(batch_size=200, numcams=20))
+    print(calc_m(batch_size=200, numcams=20, m1=10, m2=20))
+    
 
 
 

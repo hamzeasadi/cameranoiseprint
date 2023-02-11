@@ -41,11 +41,12 @@ def getm1m2(M1, M2, epoch):
 
 
 
-def train(Net:nn.Module, opt:Optimizer, m1, m2):
+def train(Net:nn.Module, opt:Optimizer, M1, M2):
     kt = utils.KeepTrack(path=cfg.paths['model'])
-    crttrain = lossfunc.OneClassBCE(batch_size=args.batch_size, num_cam=20, reg=args.reg, m1=m1, m2=m2)
-    crtval = lossfunc.OneClassBCE(batch_size=args.batch_size, num_cam=5, reg=args.reg, m1=m1, m2=m2)
     for epoch in range(args.epochs):
+        m1, m2 = getm1m2(M1=M1, M2=M2, epoch=epoch)
+        crttrain = lossfunc.OneClassBCE(batch_size=args.batch_size, num_cam=20, reg=args.reg, m1=m1, m2=m2)
+        crtval = lossfunc.OneClassBCE(batch_size=args.batch_size, num_cam=5, reg=args.reg, m1=m1, m2=m2)
         datatrain = dst.VisionDataset(datapath=cfg.paths['train'], numcam=20, batch_size=args.batch_size)
         dataval = dst.VisionDataset(datapath=cfg.paths['val'], numcam=5, batch_size=args.batch_size)
         trainl = engine.train_setp(net=Net, criterion=crttrain, datal=datatrain, optimizer=opt)
@@ -71,7 +72,7 @@ def main():
     network = m.NoisePrint(inch=inch, depth=args.depth)
     optt = torch.optim.Adam(params=network.parameters(), lr=3e-4)
     if args.train:
-        train(Net=network, opt=optt, )
+        train(Net=network, opt=optt, M1=args.m1, M2=args.m2)
 
 
 if __name__ == '__main__':
