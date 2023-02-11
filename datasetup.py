@@ -1,9 +1,9 @@
 import torch
 import os, random, sys, inspect
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir) 
+# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+# parentdir = os.path.dirname(currentdir)
+# sys.path.insert(0, parentdir) 
 
 import conf as cfg
 from torch.utils.data import Dataset, DataLoader
@@ -76,8 +76,9 @@ class VisionDataset(Dataset):
 
 def main():
     print(42)
-    x = VisionDataset(datapath=cfg.paths['iframes'], numcam=25, batch_size=200)
-    print(x.shape)
+    print(cfg.paths)
+    # x = VisionDataset(datapath=cfg.paths['iframes'], numcam=25, batch_size=200)
+    # print(x.shape)
     # for i in range(10):
     #     print(gethiwi(f'D4{i}'))
 

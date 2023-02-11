@@ -34,6 +34,7 @@ def main():
     print(42)
     for k, v in paths.items():
         create_dir(v)
+        print(v)
     
 
 
