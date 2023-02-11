@@ -54,7 +54,7 @@ def train(Net:nn.Module, opt:Optimizer, M1, M2):
 
         trainl = engine.train_setp(net=Net, criterion=crttrain, datal=datatrain, optimizer=opt)
         vall = engine.val_setp(net=Net, criterion=crtval, datal=dataval, optimizer=opt)
-        modelname = f'{args.modelname}.pt'
+        modelname = f'{args.modelname}_{epoch}.pt'
         kt.save_ckp(model=Net, opt=opt, epoch=epoch, fname=modelname, trainloss=trainl, valloss=vall)
         
 
