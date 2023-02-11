@@ -15,7 +15,8 @@ def gethiwi(camname):
     hi = int((1080-64)*random.random())
     wi = int((1920-64)*random.random())
     if (camname == 'D40') or (camname == 'D41') or (camname == 'D42') or (camname == 'D43') or (camname == 'D44'):
-        hi = max(200, min(hi, 1080-164))
+        hi = max(200, min(720-164, int((720-64)*random.random())))
+        wi = int((1280-64)*random.random())
 
     return hi, wi
 
@@ -66,21 +67,21 @@ class VisionDataset(Dataset):
         self.cams = cfg.rm_ds(os.listdir(datapath))
 
     def __len__(self):
-        return 1
+        return 10
 
     def __getitem__(self, index):
-        return getdatasample(datadir=self.db, numpatchs=self.frprcm)
+        return getdatasample(datadir=self.dp, numpatchs=self.frprcm)
 
     
 
 
 def main():
     print(42)
-    print(cfg.paths)
-    x = VisionDataset(datapath=cfg.paths['iframes'], numcam=25, batch_size=200)
-    print(x.shape)
-    # for i in range(10):
-    #     print(gethiwi(f'D4{i}'))
+    # print(cfg.paths)
+    # x = VisionDataset(datapath=cfg.paths['iframes'], numcam=25, batch_size=200)
+   
+    for i in range(10):
+        print(gethiwi(f'D4{i}'))
 
 
 

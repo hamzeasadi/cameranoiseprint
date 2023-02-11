@@ -48,7 +48,6 @@ def train(Net:nn.Module, opt:Optimizer, m1, m2):
     for epoch in range(args.epochs):
         datatrain = dst.VisionDataset(datapath=cfg.paths['train'], numcam=20, batch_size=args.batch_size)
         dataval = dst.VisionDataset(datapath=cfg.paths['val'], numcam=5, batch_size=args.batch_size)
-
         trainl = engine.train_setp(net=Net, criterion=crttrain, datal=datatrain, optimizer=opt)
         vall = engine.val_setp(net=Net, criterion=crtval, datal=dataval, optimizer=opt)
         modelname = f'{args.modelname}.pt'
