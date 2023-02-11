@@ -78,7 +78,7 @@ class VisionDataset(Dataset):
 def main():
     print(42)
     # print(cfg.paths)
-    X = VisionDataset(datapath=cfg.paths['train'], numcam=20, batch_size=200)
+    X = VisionDataset(datapath=cfg.paths['train'], numcam=20, batch_size=400)
     for x in X:
         print(x.shape)
     # for i in range(10):
