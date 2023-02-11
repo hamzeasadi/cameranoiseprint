@@ -38,6 +38,7 @@ args = parser.parse_args()
 def getm1m2(M1, M2, epoch):
     m1 = M1//(1+epoch)
     m2 = M2//(1+epoch)
+    return m1, m2
 
 
 
