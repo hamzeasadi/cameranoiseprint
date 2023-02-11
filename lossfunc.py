@@ -53,13 +53,13 @@ class OneClassBCE(nn.Module):
 
     def forward(self, x):
         xs = x.squeeze()
-        distmtx = utils.euclidean_distance_matrix(xs)
-        logits = self.m - torch.square(distmtx)
-        l1 = self.crt(logits, self.label)
+        # distmtx = utils.euclidean_distance_matrix(xs)
+        # logits = self.m - torch.square(distmtx)
+        # l1 = self.crt(logits, self.label)
         l2 = self.reg*calc_psd(xs)
         l3 = self.newloss(xs)
-        return l1 + l3 - l2
-
+        return l3 - l2
+        # return l1+l3-l2
 
 
 
