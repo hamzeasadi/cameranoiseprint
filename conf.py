@@ -10,6 +10,7 @@ paths=dict(
     root=root, data=data, home=home,
     model=os.path.join(data, 'model'), modelcoord=os.path.join(data, 'modelcoord'), training=os.path.join(data, 'training'), testing=os.path.join(data, 'testing'), 
     videos=os.path.join(data, 'videos'), iframes=os.path.join(data, 'iframes'),
+    srvzipfil=os.path.join(home, 'project', 'Datasets'),
     train=os.path.join(data, 'training', 'train'), val=os.path.join(data, 'training', 'val'), test=os.path.join(data, 'testing', 'test'), 
 
 )
