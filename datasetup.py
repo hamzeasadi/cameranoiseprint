@@ -10,6 +10,8 @@ from torch.utils.data import Dataset, DataLoader
 import cv2
 
 
+dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 # randomly select hi and wi
 def gethiwi(camname):
     hi = int((1080-64)*random.random())
@@ -70,7 +72,7 @@ class VisionDataset(Dataset):
         return 10
 
     def __getitem__(self, index):
-        return getdatasample(datadir=self.dp, numpatchs=self.frprcm)
+        return getdatasample(datadir=self.dp, numpatchs=self.frprcm).to(dev)
 
     
 
