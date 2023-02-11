@@ -46,11 +46,11 @@ def train(Net:nn.Module, opt:Optimizer, M1, M2):
     for epoch in range(args.epochs):
         m1, m2 = getm1m2(M1=M1, M2=M2, epoch=epoch)
         crttrain = lossfunc.OneClassBCE(batch_size=args.batch_size, num_cam=20, reg=args.reg, m1=m1, m2=m2)
-        crtval = lossfunc.OneClassBCE(batch_size=args.batch_size, num_cam=5, reg=args.reg, m1=m1, m2=m2)
+        crtval = lossfunc.OneClassBCE(batch_size=100, num_cam=5, reg=args.reg, m1=m1, m2=m2)
 
         datatrain = dst.VisionDataset(datapath=cfg.paths['train'], numcam=20, batch_size=args.batch_size)
-        dataval = dst.VisionDataset(datapath=cfg.paths['val'], numcam=5, batch_size=args.batch_size)
-        
+        dataval = dst.VisionDataset(datapath=cfg.paths['val'], numcam=5, batch_size=100)
+
         trainl = engine.train_setp(net=Net, criterion=crttrain, datal=datatrain, optimizer=opt)
         vall = engine.val_setp(net=Net, criterion=crtval, datal=dataval, optimizer=opt)
         modelname = f'{args.modelname}.pt'
