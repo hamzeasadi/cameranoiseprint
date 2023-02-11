@@ -3,7 +3,7 @@ import torch
 import conf as cfg
 from torch import nn as nn
 from torch.optim import Optimizer
-
+from torch.nn import functional as F
 
 
 
@@ -26,6 +26,22 @@ class KeepTrack():
     def load_ckp(self, fname):
         state = torch.load(os.path.join(self.path, fname), map_location=dev)
         return state
+
+
+def euclidean_distance_matrix(x):
+    eps = 1e-8
+    x = torch.flatten(x, start_dim=1)
+    dot_product = torch.mm(x, x.t())
+    squared_norm = torch.diag(dot_product)
+    distance_matrix = squared_norm.unsqueeze(0) - 2 * dot_product + squared_norm.unsqueeze(1)
+    distance_matrix = F.relu(distance_matrix)
+    mask = (distance_matrix == 0.0).float()
+    distance_matrix = distance_matrix.clone() + mask * eps
+    distance_matrix = torch.sqrt(distance_matrix)
+    distance_matrix = distance_matrix.clone()*(1.0 - mask)
+    return distance_matrix
+
+
 
 
 def main():

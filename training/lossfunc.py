@@ -1,24 +1,12 @@
 import torch
 from torch import nn as nn
 from torch.nn import functional as F
-
+import utils
+import lossfunc2 as loss2
 
 
 
 dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-def euclidean_distance_matrix(x):
-    eps = 1e-8
-    x = torch.flatten(x, start_dim=1)
-    dot_product = torch.mm(x, x.t())
-    squared_norm = torch.diag(dot_product)
-    distance_matrix = squared_norm.unsqueeze(0) - 2 * dot_product + squared_norm.unsqueeze(1)
-    distance_matrix = F.relu(distance_matrix)
-    mask = (distance_matrix == 0.0).float()
-    distance_matrix = distance_matrix.clone() + mask * eps
-    distance_matrix = torch.sqrt(distance_matrix)
-    distance_matrix = distance_matrix.clone()*(1.0 - mask)
-    return distance_matrix
 
 def calc_labels(batch_size, numcams):
     numframes = batch_size//numcams
@@ -60,17 +48,17 @@ class OneClassBCE(nn.Module):
         self.m = calc_m(batch_size=batch_size, numcams=num_cam, m1=m1, m2=m2)
         self.label = calc_labels(batch_size=batch_size, numcams=num_cam)
         self.crt = nn.BCEWithLogitsLoss()
+        self.newloss = loss2.SoftMLoss(batch_size=batch_size, framepercam=batch_size//num_cam)
+
 
     def forward(self, x):
         xs = x.squeeze()
-        distmtx = euclidean_distance_matrix(xs)
-        print(torch.square(distmtx))
-        print(torch.sigmoid(distmtx))
+        distmtx = utils.euclidean_distance_matrix(xs)
         logits = self.m - torch.square(distmtx)
-        print(torch.sigmoid(logits))
         l1 = self.crt(logits, self.label)
         l2 = self.reg*calc_psd(xs)
-        return l1-l2
+        l3 = self.newloss(xs)
+        return l1 + l3 - l2
 
 
 

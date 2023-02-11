@@ -17,7 +17,7 @@ class NoisePrint(nn.Module):
     def _firstblk(self):
         layer = nn.Sequential(
             nn.Conv2d(in_channels=self.inch, out_channels=64, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm2d(num_features=64, momentum=0.9, eps=1e-5)
+            nn.ReLU(inplace=True)
         )
         return layer
 
