@@ -73,6 +73,7 @@ def main():
         inch=3
     
     network = m.NoisePrint(inch=inch, depth=args.depth)
+    network.to(dev)
     optt = torch.optim.Adam(params=network.parameters(), lr=3e-4)
     if args.train:
         train(Net=network, opt=optt, M1=args.m1, M2=args.m2)
