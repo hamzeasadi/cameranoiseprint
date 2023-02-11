@@ -69,7 +69,7 @@ class VisionDataset(Dataset):
         self.cams = cfg.rm_ds(os.listdir(datapath))
 
     def __len__(self):
-        return 10
+        return 1
 
     def __getitem__(self, index):
         return getdatasample(datadir=self.dp, numpatchs=self.frprcm).to(dev)
