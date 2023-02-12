@@ -9,7 +9,7 @@ import utils
 import datasetup as dst
 import argparse
 import engine
-
+import os
 
 
 
@@ -56,7 +56,8 @@ def train(Net:nn.Module, opt:Optimizer, M1, M2):
         vall = engine.val_setp(net=Net, criterion=crtval, datal=dataval, optimizer=opt)
         print(trainl, vall)
         modelname = f'{args.modelname}_{epoch}.pt'
-        kt.save_ckp(model=Net, opt=opt, epoch=epoch, fname=modelname, trainloss=trainl, valloss=vall)
+        torch.save(Net, modelname)
+        # kt.save_ckp(model=Net, opt=opt, epoch=epoch, fname=modelname, trainloss=trainl, valloss=vall)
         
 
 
