@@ -19,13 +19,13 @@ def create_dir(path):
     try:
         os.makedirs(path)
     except Exception as e:
-        print(e)
+        pass
 
 def rm_ds(mylist:list):
     try:
         mylist.remove('.DS_Store')
     except Exception as e:
-        print(e)
+        pass
     return mylist
 
 
