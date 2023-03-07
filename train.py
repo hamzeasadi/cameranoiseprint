@@ -38,10 +38,12 @@ def train():
     kt = utils.KeepTrack(path=cfg.paths['model'])
     gen = m.NoisePrint(inch=3, depth=args.depth)
     disc = m.Disc(inch=1)
+    gen.to(dev)
+    disc.to(dev)
     opt = Adam(params=list(disc.parameters())+list(gen.parameters()), lr=3e-4)
     for epoch in range(args.epochs):
         datatrain = dst.create_loader(batch_size=args.batch_size, num_cams=args.num_cams, dl=args.dl)
-        
+
         trainl = engine.train_step(gen=gen, disc=disc, disc_opt=opt, data=datatrain, 
                                    batch_size=args.batch_size, num_cams=args.num_cams, ratio=args.ratio)
         print(trainl)

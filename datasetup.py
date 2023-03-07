@@ -16,8 +16,6 @@ width = list(np.arange(start=0, stop=1920-64, step=10))
 
 # randomly select hi and wi
 def gethiwi(H:int=1080, W:int=1920):
-    # hi = int((H-64)*random.random())
-    # wi = int((W-64)*random.random())
     hi = random.sample(hight, 1)
     wi = random.sample(width, 1)
     return hi[0], wi[0]
@@ -95,7 +93,7 @@ def create_loader(batch_size:int=40, num_cams:int=5, dl:int=10000):
 
 def main():
     print(42)
-    
+
 
 
 if __name__ == '__main__':
