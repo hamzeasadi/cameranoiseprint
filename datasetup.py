@@ -88,7 +88,7 @@ class VisionDataset(Dataset):
     
 def create_loader(batch_size:int=40, num_cams:int=5, dl:int=10000):
     dataset = VisionDataset(datapath=paths.itrain, numcam=num_cams, batch_size=batch_size, dataset_len=dl)
-    data_loader = DataLoader(dataset=dataset, batch_size=1, pin_memory=True)
+    data_loader = DataLoader(dataset=dataset, batch_size=1)
     return data_loader
 
 def main():
