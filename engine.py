@@ -28,7 +28,7 @@ def train_step(gen:nn.Module, disc:nn.Module, disc_opt:Optimizer, data:DataLoade
         disc_opt.step()
     
 
-        epochloss +=  (1/(i+1))*(gdisc_loss.item() - epochloss)
+        epoch_loss +=  (1/(i+1))*(gdisc_loss.item() - epoch_loss)
     
     return epoch_loss
 
