@@ -51,7 +51,7 @@ def walk_test(dirpath):
 if __name__ == "__main__":
     print(42)
     paths = Paths()
-    # for path in paths:
-    #     create_dir(path)
+    for path in paths:
+        create_dir(path)
 
-    walk_test((paths.data))
+    # walk_test((paths.data))
