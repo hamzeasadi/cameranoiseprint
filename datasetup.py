@@ -1,39 +1,36 @@
+import os 
+import random
 import torch
-import os, random, sys, inspect
-
-# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-# parentdir = os.path.dirname(currentdir)
-# sys.path.insert(0, parentdir) 
-
-import conf as cfg
 from torch.utils.data import Dataset, DataLoader
 import cv2
+import numpy as np
+import conf as cfg
 
 
 dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+paths = cfg.Paths()
+
 
 # randomly select hi and wi
-def gethiwi(camname):
-    hi = int((1080-64)*random.random())
-    wi = int((1920-64)*random.random())
-    if (camname == 'D40') or (camname == 'D41') or (camname == 'D42') or (camname == 'D43') or (camname == 'D44'):
-        hi = max(200, min(720-164, int((720-64)*random.random())))
-        wi = int((1280-64)*random.random())
-
+def gethiwi(H:int=1080, W:int=1920):
+    hi = int((H-64)*random.random())
+    wi = int((W-64)*random.random())
     return hi, wi
 
-# extract a patch (green channel) of image in location hi, wi
+
+
 def patchtensorify(img, hi, wi):
-    imgpatch = img[hi:hi+64, wi:wi+64, 1:2]
-    imgpatch = (imgpatch - 127)/255.0
+    imgpatch = img[hi:hi+64, wi:wi+64, :]
+    imgpatch = imgpatch/255.0
     return torch.from_numpy(imgpatch).permute(2, 0, 1)
 
 # extract patchprcam patchs from on random location, hi,wi, from a camera folder
-def getpatch(campath, camname, patchprcam):
-    hi, wi = gethiwi(camname=camname)
-    camiframes = cfg.rm_ds(os.listdir(campath))
-    subcamiframes = random.sample(camiframes, patchprcam)
-    patchsample = torch.zeros(size=(patchprcam, 1, 64, 64))
+def getpatch(campath, num_patch):
+    hi, wi = gethiwi()
+    cam_iframes = cfg.rm_ds(os.listdir(campath))
+    subcamiframes = random.sample(cam_iframes, num_patch)
+    patchsample = torch.zeros(size=(num_patch, 3, 64, 64), dtype=torch.float32)
+
     for j, iframename in enumerate(subcamiframes):
         iframepath = os.path.join(campath, iframename)
         img = cv2.imread(iframepath)
@@ -62,30 +59,42 @@ class VisionDataset(Dataset):
     """
     doc
     """
-    def __init__(self, datapath, numcam, batch_size) -> None:
+    def __init__(self, datapath, numcam, batch_size, dataset_len) -> None:
         super().__init__()
         self.dp = datapath
+        self.num_cams = numcam
+        self.dl = dataset_len
         self.frprcm = batch_size//numcam
         self.cams = cfg.rm_ds(os.listdir(datapath))
 
     def __len__(self):
-        return 1
+        return self.dl
 
     def __getitem__(self, index):
-        return getdatasample(datadir=self.dp, numpatchs=self.frprcm).to(dev)
+        sub_cams = random.sample(self.cams, self.num_cams)
+        patchs = torch.randn(size=(1, 3, 64, 64))
+   
+        for cam_name in sub_cams:
+            cam_path = os.path.join(self.dp, cam_name)
+            patch = getpatch(campath=cam_path, num_patch=self.frprcm)
+            patchs = torch.cat((patchs, patch), dim=0)
+
+
+        return patchs[1:].float().to(dev)
 
     
-
+def create_loader(batch_size:int=40, num_cams:int=5, dl:int=10000):
+    dataset = VisionDataset(datapath=paths.itrain, numcam=num_cams, batch_size=batch_size, dataset_len=dl)
+    data_loader = DataLoader(dataset=dataset, batch_size=1, pin_memory=True)
+    return data_loader
 
 def main():
     print(42)
-    # print(cfg.paths)
-    X = VisionDataset(datapath=cfg.paths['train'], numcam=20, batch_size=400)
-    for x in X:
-        print(x.shape)
-    # for i in range(10):
-    #     print(gethiwi(f'D4{i}'))
-
+    h = np.random.uniform(low=0, high=1080-64, size=10)
+    w = np.random.uniform(low=0, high=1920-64, size=10)
+  
+    print(h)
+    print(w)
 
 
 if __name__ == '__main__':

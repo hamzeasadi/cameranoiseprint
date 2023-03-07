@@ -1,43 +1,57 @@
 import os
-import random
 from os.path import expanduser
+from typing import NamedTuple
 
-root = os.getcwd()
-data = os.path.join(root, 'data')
-home = expanduser("~")
 
-paths=dict(
-    root=root, data=data, home=home,
-    model=os.path.join(data, 'model'), modelcoord=os.path.join(data, 'modelcoord'), training=os.path.join(data, 'training'), testing=os.path.join(data, 'testing'), 
-    videos=os.path.join(data, 'videos'), iframes=os.path.join(data, 'iframes'),
-    srvzipfil=os.path.join(home, 'project', 'Datasets'),
-    train=os.path.join(data, 'training', 'train'), val=os.path.join(data, 'training', 'val'), test=os.path.join(data, 'testing', 'test'), 
 
-)
 
-def create_dir(path):
+
+class Paths(NamedTuple):
+    """
+    paths for the management of current project
+    """
+    root:str=os.getcwd()
+    home:str=expanduser("~")
+    data:str=os.path.join(root, 'data')
+    model:str=os.path.join(data, 'model')
+    output:str=os.path.join(data, 'output')
+    artifacts:str=os.path.join(output, 'artifacts')
+    logs:str=os.path.join(output, 'logs')
+    figs:str=os.path.join(output, 'figs')
+    dataset:str=os.path.join(data, 'dataset')
+    videos:str=os.path.join(dataset, 'videos')
+    vtrain:str=os.path.join(videos, 'vtrain')
+    vtest:str=os.path.join(videos, 'vtest')
+    iframes:str=os.path.join(dataset, 'iframes')
+    itrain:str=os.path.join(iframes, 'itrain')
+    itest:str=os.path.join(iframes, 'itest')
+
+
+def create_dir(dir_path:str)->None:
     try:
-        os.makedirs(path)
+        os.makedirs(dir_path)
+    except Exception as e:
+        print("it probably already exist")
+
+def rm_ds(arr:list)->list:
+    try:
+        arr.remove('.DS_Store')
     except Exception as e:
         pass
-
-def rm_ds(mylist:list):
-    try:
-        mylist.remove('.DS_Store')
-    except Exception as e:
-        pass
-    return mylist
+    return arr
 
 
+def walk_test(dirpath):
+    for path1, dirname1, files in os.walk(dirpath):
+        print(path1)
+        print(dirname1)
+        print(files)
+        print("====================================")
 
-
-def main():
+if __name__ == "__main__":
     print(42)
-    for k, v in paths.items():
-        create_dir(v)
-        print(v)
-    
+    paths = Paths()
+    # for path in paths:
+    #     create_dir(path)
 
-
-if __name__ == '__main__':
-    main()
+    walk_test((paths.data))
