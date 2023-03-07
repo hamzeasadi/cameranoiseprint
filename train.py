@@ -4,7 +4,7 @@ import torch
 from torch import nn as nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader, Dataset
-import lossfunc
+from torch.optim import Adam
 import utils
 import datasetup as dst
 import argparse
@@ -19,15 +19,14 @@ parser = argparse.ArgumentParser(prog='train.py', description='read setting for 
 
 parser.add_argument('--train', action=argparse.BooleanOptionalAction)
 parser.add_argument('--test', action=argparse.BooleanOptionalAction)
-parser.add_argument('--adaptive', action=argparse.BooleanOptionalAction)
-parser.add_argument('--coord', action=argparse.BooleanOptionalAction)
+
 
 parser.add_argument('--epochs', type=int, default=100, required=True)
 parser.add_argument('--batch_size', type=int, default=200, required=True)
 parser.add_argument('--depth', type=int, default=15, required=True)
-parser.add_argument('--reg', type=float, default=1, required=True)
-parser.add_argument('--m1', type=float, default=100)
-parser.add_argument('--m2', type=float, default=1000)
+parser.add_argument('--num_cams', type=int, default=5, required=True)
+parser.add_argument('--dl', type=int, default=100, required=True)
+parser.add_argument('--ratio', type=float, default=1)
 
 parser.add_argument('--modelname', type=str, required=True)
 
@@ -35,51 +34,25 @@ args = parser.parse_args()
 
 
 
-def getm1m2(M1, M2, epoch):
-    m1 = M1//(1+epoch)
-    m2 = M2//(1+epoch)
-    return m1, m2
-
-
-
-def train(Net:nn.Module, opt:Optimizer, M1, M2):
+def train():
     kt = utils.KeepTrack(path=cfg.paths['model'])
+    gen = m.NoisePrint(inch=3, depth=args.depth)
+    disc = m.Disc(inch=1)
+    opt = Adam(params=list(disc.parameters())+list(gen.parameters()), lr=3e-4)
     for epoch in range(args.epochs):
-        m1, m2 = getm1m2(M1=M1, M2=M2, epoch=epoch)
-        crttrain = lossfunc.OneClassBCE(batch_size=args.batch_size, num_cam=20, reg=args.reg, m1=m1, m2=m2)
-        crtval = lossfunc.OneClassBCE(batch_size=100, num_cam=5, reg=args.reg, m1=m1, m2=m2)
-        print(epoch)
-        datatrain = dst.VisionDataset(datapath=cfg.paths['train'], numcam=20, batch_size=args.batch_size)
-        dataval = dst.VisionDataset(datapath=cfg.paths['val'], numcam=5, batch_size=100)
-
-        trainl = engine.train_setp(net=Net, criterion=crttrain, datal=datatrain, optimizer=opt)
-        vall = engine.val_setp(net=Net, criterion=crtval, datal=dataval, optimizer=opt)
-        print(trainl, vall)
+        datatrain = dst.create_loader(batch_size=args.batch_size, num_cams=args.num_cams, dl=args.dl)
+        
+        trainl = engine.train_step(gen=gen, disc=disc, disc_opt=opt, data=datatrain, 
+                                   batch_size=args.batch_size, num_cams=args.num_cams, ratio=args.ratio)
+        print(trainl)
         modelname = f'{args.modelname}_{epoch}.pt'
-        torch.save(Net, modelname)
-        # kt.save_ckp(model=Net, opt=opt, epoch=epoch, fname=modelname, trainloss=trainl, valloss=vall)
+        if epoch%10 == 0:
+            kt.save_ckp(model=gen, opt=opt, epoch=epoch, fname=modelname, trainloss=trainl, valloss=0.1)
         
 
 
 
-
-
-
-
-
-
-def main():
-    print(args)
-    inch=1
-    if args.coord:
-        inch=3
-    
-    network = m.NoisePrint(inch=inch, depth=args.depth)
-    network.to(dev)
-    optt = torch.optim.Adam(params=network.parameters(), lr=3e-4)
-    if args.train:
-        train(Net=network, opt=optt, M1=args.m1, M2=args.m2)
-
-
 if __name__ == '__main__':
-    main()
+    print(args)
+    if args.train:
+        train()

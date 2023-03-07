@@ -10,12 +10,17 @@ import conf as cfg
 dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 paths = cfg.Paths()
 
+hight = list(np.arange(start=0, stop=1080-64, step=10))
+width = list(np.arange(start=0, stop=1920-64, step=10)) 
+
 
 # randomly select hi and wi
 def gethiwi(H:int=1080, W:int=1920):
-    hi = int((H-64)*random.random())
-    wi = int((W-64)*random.random())
-    return hi, wi
+    # hi = int((H-64)*random.random())
+    # wi = int((W-64)*random.random())
+    hi = random.sample(hight, 1)
+    wi = random.sample(width, 1)
+    return hi[0], wi[0]
 
 
 
@@ -66,7 +71,7 @@ class VisionDataset(Dataset):
         self.dl = dataset_len
         self.frprcm = batch_size//numcam
         self.cams = cfg.rm_ds(os.listdir(datapath))
-
+        
     def __len__(self):
         return self.dl
 
@@ -90,11 +95,7 @@ def create_loader(batch_size:int=40, num_cams:int=5, dl:int=10000):
 
 def main():
     print(42)
-    h = np.random.uniform(low=0, high=1080-64, size=10)
-    w = np.random.uniform(low=0, high=1920-64, size=10)
-  
-    print(h)
-    print(w)
+    
 
 
 if __name__ == '__main__':

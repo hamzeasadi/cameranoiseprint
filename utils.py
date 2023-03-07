@@ -1,9 +1,11 @@
 import os
 import torch
+from itertools import combinations
+import random
 import conf as cfg
 from torch import nn as nn
 from torch.optim import Optimizer
-from torch.nn import functional as F
+import numpy as np
 
 
 
@@ -27,33 +29,45 @@ class KeepTrack():
         state = torch.load(os.path.join(self.path, fname), map_location=dev)
         return state
 
+def get_pairs(batch_size, frprcam, ratio=2):
+    pair_list = list(combinations(list(range(batch_size)), r=2))
+    pos_pairs = []
+    for i in range(0, batch_size-1, frprcam):
+        sub_pos_pair = list(combinations(list(range(i, i+frprcam)), r=2))
+        for pair in sub_pos_pair:
+            pos_pairs.append(pair)
+    indexs = []
+    for pair in pair_list:
+        if pair in pos_pairs:
+            indexs.append([pair[0], pair[1], 0])
+        else:
+            indexs.append([pair[0], pair[1], 1])
 
-def euclidean_distance_matrix(x):
-    eps = 1e-8
-    x = torch.flatten(x, start_dim=1)
-    dot_product = torch.mm(x, x.t())
-    squared_norm = torch.diag(dot_product)
-    distance_matrix = squared_norm.unsqueeze(0) - 2 * dot_product + squared_norm.unsqueeze(1)
-    distance_matrix = F.relu(distance_matrix)
-    mask = (distance_matrix == 0.0).float()
-    distance_matrix = distance_matrix.clone() + mask * eps
-    distance_matrix = torch.sqrt(distance_matrix)
-    distance_matrix = distance_matrix.clone()*(1.0 - mask)
-    return distance_matrix
+    random.shuffle(indexs)
+    indexs_np = np.array(indexs)
+    index_1, index_2, labels = indexs_np[:, 0], indexs_np[:, 1], indexs_np[:, 2]
+
+    weights = labels.copy()
+    for i, elm in enumerate(weights):
+        if elm == 0:
+            weights[i] = ratio
+        else:
+            weights[i] = 1
+
+    labels = torch.from_numpy(labels).view(-1, 1)
+    weights = torch.from_numpy(weights).view(-1, 1)*200
+    # print(weights)
+    return index_1, index_2, labels.float().to(dev), weights.float().to(dev)
+
 
 
 
 
 def main():
     epochs=100
-    M1 = 10000
-    M2 = 10000
-    for i in range(epochs):
-        m1 = max(10, M1-i*200)
-        m2 = max(20, M2-i*100)
-        print(m1, m2)
+
 
 
 
 if __name__ == '__main__':
-    main()
+    print(42)
