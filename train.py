@@ -14,6 +14,7 @@ import os
 
 
 dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+paths = cfg.Paths()
 
 parser = argparse.ArgumentParser(prog='train.py', description='read setting for training proceduer')
 
@@ -35,7 +36,7 @@ args = parser.parse_args()
 
 
 def train():
-    kt = utils.KeepTrack(path=cfg.paths['model'])
+    kt = utils.KeepTrack(path=paths.model)
     gen = m.NoisePrint(inch=3, depth=args.depth)
     disc = m.Disc(inch=1)
     gen.to(dev)
