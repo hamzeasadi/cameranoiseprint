@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 dataset/
 dataset
+dataset.gz.tar
 .DS_Store
 .DS_Store/
