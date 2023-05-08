@@ -103,7 +103,10 @@ def get_lmdb_entery(database_path, database_name, image_id):
 
 if __name__ == '__main__':
     print(42)
-    databasepath = '/home/hasadi/project/cameranoiseprint/dataset'
+
+    home = os.path.expanduser('~')
+    databasepath = os.path.join(home, 'project/Datasets/dataset/')
+    # databasepath = '/home/hasadi/project/cameranoiseprint/dataset'
     databasename = 'lmdb_720x1280'
 
     with open(os.path.join(databasepath, 'meta_data.json')) as json_file:
