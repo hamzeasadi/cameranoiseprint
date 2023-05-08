@@ -110,9 +110,14 @@ if __name__ == '__main__':
         meta_data = json.load(json_file)
 
     cames = list(meta_data.keys())
+    
+    # key_id = f"{cames[1]}_{10:08}".encode(encoding='utf-8')
+    # img, label = get_lmdb_entery(database_path=databasepath, database_name=databasename, image_id=key_id)
+    # print(img.shape)
 
-    key_id = f"{cames[1]}_{10:08}".encode(encoding='utf-8')
-    img, label = get_lmdb_entery(database_path=databasepath, database_name=databasename, image_id=key_id)
-    print(img.shape)
+    with lmdb.open(os.path.join(databasepath, databasename), readonly=True) as conn:
+        with conn.begin() as txn:
+            stats = txn.stat()
+            print(stats)
 
    
