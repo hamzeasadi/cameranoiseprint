@@ -110,6 +110,7 @@ if __name__ == '__main__':
         meta_data = json.load(json_file)
 
     cames = list(meta_data.keys())
+    print(cames)
 
     key_id = f"{cames[1]}_{10:08}".encode(encoding='utf-8')
     img, label = get_lmdb_entery(database_path=databasepath, database_name=databasename, image_id=key_id)
