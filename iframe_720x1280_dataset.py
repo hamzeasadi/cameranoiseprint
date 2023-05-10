@@ -136,82 +136,35 @@ if __name__ == '__main__':
     #     meta = json.load(json_file)
     #     print(len(list(meta.keys())))
 
-    
 
+    hs = [0, 224]
+    ws = [0, 224, 448, 672, 896]
 
+    with open(os.path.join(databasepath, 'meta_data.json')) as json_file:
+        meta = json.load(json_file)
 
+    connw = lmdb.open(db64, map_size=1e+12)
+    with connw.begin(write=True) as txnw:
+        ky_cnt = 0
+        for ky, vl in meta.items():
+            h, w, c = vl['iframe_shape']
+            num_h = h//64
+            num_w = w//64
 
+            lbl = vl['label']
+            for i in range(vl['num_iframe']):
+                acc_ky = f"{ky}_{i:08}".encode(encoding='utf-8')
+                image, label  = ble.get_lmdb_entery(database_path=databasepath, database_name=databasename, image_id=acc_ky)
+                for hidx in range(num_h):
+                    hi = hidx*64
+                    for widx in range(num_w):
+                        wi = widx*64
+                        patch = image[hi:hi+64, wi:wi+64, :]
+                        key_id = f"{ky_cnt:08}".encode(encoding='utf-8')
+                        key_value = Image_entery(image=patch, label=label)
+                        txnw.put(key_id, pickle.dumps(key_value))
+                        ky_cnt += 1
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # with open(os.path.join(databasepath, 'meta_data.json')) as json_file:
-    #     meta = json.load(json_file)
-
-    # connw = lmdb.open(db64, map_size=1e+12)
-    # with connw.begin(write=True) as txnw:
-    #     ky_cnt = 0
-    #     for ky, vl in meta.items():
-    #         h, w, c = vl['iframe_shape']
-    #         num_h = h//64
-    #         num_w = w//64
-
-    #         lbl = vl['label']
-    #         for i in range(vl['num_iframe']):
-    #             acc_ky = f"{ky}_{i:08}".encode(encoding='utf-8')
-    #             image, label  = ble.get_lmdb_entery(database_path=databasepath, database_name=databasename, image_id=acc_ky)
-    #             for hidx in range(num_h):
-    #                 hi = hidx*64
-    #                 for widx in range(num_w):
-    #                     wi = widx*64
-    #                     patch = image[hi:hi+64, wi:wi+64, :]
-    #                     key_id = f"{ky_cnt:08}".encode(encoding='utf-8')
-    #                     key_value = Image_entery(image=patch, label=label)
-    #                     txnw.put(key_id, pickle.dumps(key_value))
-    #                     ky_cnt += 1
-
-    # connw.close()
+    connw.close()
 
     
