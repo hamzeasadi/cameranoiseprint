@@ -1,96 +1,104 @@
 import os
 from os.path import expanduser
+import sys
 import random
 import json
-from typing import Optional
+from typing import Optional, Tuple
+
+import cv2
+import lmdb
 import torch
 import numpy as np
 from matplotlib import pyplot as plt
+# sys.path.append('../..')
+# sys.path.append(os.getcwd())
 
-from Base_lmdb_entery import Image_entery
-import Base_lmdb_entery as ble
+from Module.Data.Base_lmdb_entery import Image_entery
+from Module.Data import Base_lmdb_entery
 from torch.utils.data import Dataset, DataLoader
 from Module.Utils import basic_utils
+from Module.Data import denoise 
 
 
-dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+def crop_and_denoise(img, crop_size, denoise_method, vscale, fup):
+    h, w = crop_size
+    hc, wc = 720//2, 1280//2
+    crop = img[hc-h//2:hc+h//2, wc-w//2:wc+w//2, :]
+    crop = crop.astype(np.float32)
+    denoise_crop = denoise.skiwt(img=crop, method=denoise_method, vscale=vscale)
+    denoise_crop_down = cv2.resize(denoise_crop, None, fx=(1/fup), fy=(1/fup), interpolation=cv2.INTER_LINEAR)
+    denoise_crop_up = cv2.resize(denoise_crop_down, None, fx=fup, fy=fup, interpolation=cv2.INTER_LINEAR)
 
-def get_patch(img, hc:Optional[int]=None, wc:Optional[int]=None, rnd:bool=True):
-    if rnd:
-        hc = np.random.randint(low=32, high=720-32)
-        wc = np.random.randint(low=32, high=1280-32)
-        crop = img[hc-32:hc+32, wc-32:wc+32, :]
-    else:
-        crop = img[hc-32:hc+32, wc-32:wc+32, :]
-
-    return crop/255
-        
-
-
+    return crop, denoise_crop_up
 
 
 
-class Iframe720X1280(Dataset):
-    """
-    doc
-    """
-    def __init__(self, database_path, database_name, batch_size, num_cams, epoch) -> None:
-        super().__init__()
-        self.batch_size = batch_size
-        self.epch = epoch
-        self.num_cams = num_cams
-        self.dbpath = database_path
-        self.dbname = database_name
-        with open(os.path.join(database_path, 'meta_data.json')) as json_file:
-            self.meta = json.load(json_file)
-
-        cam_names = list(self.meta.keys())
-        self.sub_cams = random.sample(cam_names, num_cams)
-        self.frprcam = batch_size//num_cams
-
+class VideoData(Dataset):
+    def __init__(self, db_path:str, db_name:str, crop_size:Optional[Tuple]=None, fup:int=2, denoise_method:str='vshrink', vscale:int=1):
+        self.cs = crop_size
+        self.db_path = db_path
+        self.db_name = db_name
+        self.dm = denoise_method
+        self.vscale = vscale
+        self.fup = fup
 
     def __len__(self):
-        return 10000
-    
+        with lmdb.open(self.db_path, readonly=True) as conn:
+            with conn.begin() as txn:
+                stat = txn.stat()
+                return stat['entries']
+            
     def __getitem__(self, index):
-        X = torch.randn(size=(self.num_cams*self.frprcam, 3, 64, 64))
-        Y = torch.ones(size=(self.num_cams*self.frprcam, 1))
-        img_ptn = 0
-        for cam_name in self.sub_cams:
-            frame_ids = np.random.randint(low=0, high=self.meta[cam_name]['num_iframe'], size=self.frprcam)
-            key_ids = [f"{cam_name}_{fid:08}".encode(encoding='utf-8') for fid in frame_ids]
-            for key_id in key_ids:
-                image, label  = ble.get_lmdb_entery(database_path=self.dbpath, database_name=self.dbname, image_id=key_id)
-                patch = get_patch(img=np.copy(image))
-                patcht = torch.from_numpy(patch).permute(2, 0, 1).float()
-                X[img_ptn] = patcht
-                Y[img_ptn] = torch.tensor(label)
-                img_ptn+=1
+        acc_id = f"{index:08}".encode(encoding='utf-8')
+        img, label = Base_lmdb_entery.get_lmdb_entery(database_path=self.db_path, database_name=self.db_name, image_id=acc_id)
+        
+        patch, dnoise_patch = crop_and_denoise(img=img, crop_size=self.cs, denoise_method=self.dm, vscale=self.vscale, fup=self.fup)
+        patch = patch/np.max(patch)
+        dnoise_patch = dnoise_patch/np.max(dnoise_patch)
+        patch_t = torch.from_numpy(patch).float().permute(2, 0, 1)
+        dnoise_patch_t = torch.from_numpy(dnoise_patch).float().permute(2, 0, 1)
+        return patch_t, dnoise_patch_t, torch.tensor(label)
 
-        return X.float().to(dev), Y.float().to(dev)
-    
-
-
-def create_loader(num_cams, batch_size):
-    home = expanduser('~')
-    dbpath = os.path.join(home, 'project', 'Datasets', 'dataset')
-    dbname = 'lmdb_720x1280'
-    db = Iframe720X1280(database_path=dbpath, database_name=dbname, batch_size=batch_size, num_cams=num_cams, epoch=1)
-    db_loader = DataLoader(db, batch_size=1)
-    return db_loader
 
 
 
 
 if __name__ == '__main__':
     print(42)
-    databasepath = '/home/hasadi/project/cameranoiseprint/dataset'
-    databasename = 'lmdb_720x1280'
-    dataset = Iframe720X1280(database_path=databasepath, database_name=databasename, batch_size=40, num_cams=10, epoch=1)
-    X, y = dataset[0]
-    print(X[0])
-    print(y)
-    # plt.imshow(X[0].permute(1, 2, 0).numpy())
+
+    new_db_path = '/home/hasadi/project/cameranoiseprint/data'
+    new_db_name = 'vision_720x1280'
+    new_db = os.path.join(new_db_path, new_db_name)
+
+    dataset = VideoData(db_path=new_db_path, db_name=new_db_name, crop_size=(510, 510), fup=3)
+    img, dimg, lbl = dataset[0]
+    
+    layer = torch.nn.Conv2d(in_channels=3, out_channels=3, kernel_size=5, stride=1)
+
+    k = layer(img)
+    k1 = layer(dimg)
+
+    knp = k.detach().permute(1,2,0).numpy()
+    k1np = k1.detach().permute(1,2,0).numpy()
+
+    print(k.shape)
+
+    fig, axs = plt.subplots(nrows=1, ncols=3)
+
+    axs[0].imshow(knp)
+    axs[1].imshow(k1np)
+    axs[2].imshow(knp-k1np)
+
+    plt.show()
+    
+
+    # fig, axs = plt.subplots(nrows=1, ncols=2)
+    # axs[0].imshow(img.permute(1, 2, 0).numpy(), cmap='gray')
+    # axs[1].imshow(dimg.permute(1, 2, 0).numpy(), cmap='gray')
+
+
+    # plt.subplots_adjust(wspace=0, hspace=0)
     # plt.show()
+
 
     

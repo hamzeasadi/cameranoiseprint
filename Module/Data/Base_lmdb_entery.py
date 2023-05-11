@@ -1,4 +1,5 @@
 import os
+import sys
 import pickle
 import csv
 import json
@@ -7,6 +8,11 @@ from PIL import Image
 import numpy as np
 import random
 from matplotlib import pyplot as plt
+
+
+
+# sys.path.append('../..')
+# sys.path.append(os.getcwd())
 
 
 class Image_entery():

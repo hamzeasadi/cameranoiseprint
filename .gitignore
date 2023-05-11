@@ -132,4 +132,4 @@ dataset
 dataset.gz.tar
 .DS_Store
 .DS_Store/
-dataset64/
+data/
