@@ -3,6 +3,7 @@ import sys
 import torch
 from torch import nn
 from torchvision.models import resnet18, ResNet18_Weights
+import torchvision
 sys.path.append('../..')
 sys.path.append(os.getcwd())
 
@@ -19,7 +20,7 @@ class VideoSource(nn.Module):
         super().__init__()
         self.inch = inch
         self.outch = outch
-        self.resnet_18 = resnet18(weights=ResNet18_Weights)
+        self.resnet_18 = resnet18(weights=ResNet18_Weights.DEFAULT)
 
     
 
@@ -34,6 +35,5 @@ if __name__ == '__main__':
     new_db_name = 'vision_720x1280'
     new_db = os.path.join(new_db_path, new_db_name)
    
-
-    model = VideoSource()
-    print(model)
+    # model = VideoSource()
+    # print(model)
