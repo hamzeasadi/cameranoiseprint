@@ -22,7 +22,7 @@ class Engine:
     engine 
     """
     def __init__(self, epochs:int, dataset:DataLoader, model:nn.Module, opt:Optimizer, 
-                 criterion:nn.Module, paths:Paths, dev:Type(torch.device)) -> None:
+                 criterion:nn.Module, paths:Paths, dev:torch.device) -> None:
         self.dev = dev
         self.model = model
         self.model.to(dev)
