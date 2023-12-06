@@ -37,7 +37,7 @@ class Noiseprint_Dataset(Dataset):
     def __getitem__(self, index):
         sample_info = self.samples[index]
         sample_x = self.sampler(cam_name=sample_info[0], crop_size=sample_info[1])
-        print(sample_x.shape, sample_info[0])
+
         return sample_x, torch.ones(size=(self.num_videos, 1))*sample_info[-1]
     
 
@@ -74,13 +74,10 @@ def main():
     crop_size = dict(topleftcorner_x=None, topleftcorner_y=None, h=64, w=64)
 
     dataset = Noiseprint_Dataset(paths=paths, general_crop_size=crop_size)
-    print(dataset.samples) 
-    # loader = DataLoader(dataset=dataset, batch_size=10, collate_fn=custome_collate, shuffle=True)
-
-    # batch = next(iter(loader))
-    # print(batch[0].shape)
-    # print(batch[1])
-
+    # print(dataset.samples) 
+    
+    for i in range(len(dataset)):
+        pass
 
 
 

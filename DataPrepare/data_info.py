@@ -103,6 +103,8 @@ def get_videos_prcam(paths:Paths, num_videos:int=None, dataset_name:str='socrati
                 sub_videos[video_name] = video_info
                 cntr += 1
         if cntr>=num_videos:
+            if cntr!=num_videos:
+                print(cntr, num_videos)
             dataset_info[cam_name] = {'info':sub_videos, 'crops':videos_info['crops']}
     
     empty_cams = []
