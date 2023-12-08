@@ -24,8 +24,7 @@ class Engine:
     def __init__(self, epochs:int, dataset:DataLoader, model:nn.Module, opt:Optimizer, 
                  criterion:nn.Module, paths:Paths, dev:torch.device) -> None:
         self.dev = dev
-        self.model = model
-        self.model.to(dev)
+        self.model = model.to(dev)
         self.paths = paths
         self.loader = dataset
         self.criterion = criterion
