@@ -51,7 +51,7 @@ class Engine:
         return dict(loss=train_loss/num_batches)
     
 
-    def train_step(self, epoch):
+    def valid_step(self, epoch):
         valid_loss = 0.0
         self.model.eval()
         num_batches = len(self.loader)
