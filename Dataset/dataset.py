@@ -61,7 +61,7 @@ def create_loader(dataset:str=None, batch_size:int=10):
         crop_size = dict(topleftcorner_x=None, topleftcorner_y=None, h=64, w=64)
         dataset = Noiseprint_Dataset(paths=paths, general_crop_size=crop_size)
     
-    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, collate_fn=custome_collate, num_workers=10)
+    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, collate_fn=custome_collate, num_workers=2)
     return loader
 
 
