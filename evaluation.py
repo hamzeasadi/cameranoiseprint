@@ -30,7 +30,7 @@ def main():
     ckp_num = args.ckp_num
     ckp_name = f"ckpoint_{ckp_num}.pt"
     model_path = os.path.join(paths.model, ckp_name)
-    model = torch.load(model_path)
+    model = torch.load(model_path, map_location=torch.device("cpu"))
     model.eval()
     res = []
     with torch.no_grad():
