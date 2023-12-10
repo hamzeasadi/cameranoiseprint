@@ -73,6 +73,7 @@ def main():
     parser.add_argument("--lamda", type=float, required=True, default=0.5)
     args = parser.parse_args()
 
+    dev = torch.device("cuda")
 
     dataset = Noiseprint_Dataset(paths=paths)
     dataset_size = len(dataset)
@@ -87,8 +88,8 @@ def main():
         train_loss = 0.0
         for i in range(dataset_size):
             X, y = dataset[i]
-            out = model(X)
-            loss = criterion(out, y, psd_flag=True)
+            out = model(X.to(dev))
+            loss = criterion(out, y.to(dev), psd_flag=True)
             opt.zero_grad()
             loss.backward()
             opt.step()
