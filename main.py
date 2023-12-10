@@ -13,7 +13,7 @@ from torch.optim import Adam
 from Utils.gutils import Paths
 from Dataset.dataset import create_loader, Noiseprint_Dataset
 from Model.noiseprint_model import Noise_Print
-from Loss.lossfunction import Loss_Function
+from Loss.lossfunction import NP_Loss
 from Engine.engine import Engine
 
 
@@ -67,13 +67,15 @@ def main():
 
     dataset = Noiseprint_Dataset(paths=paths)
     model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=17)
+    criterion = NP_Loss(lamda=0.5)
 
     model.train()
 
     X, y = dataset[0]
     out = model(X)
-
+    loss = criterion(out, y, psd_flag=True)
     print(out.shape)
+    print(loss)
 
 
 
