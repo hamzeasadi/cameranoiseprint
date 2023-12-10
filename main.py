@@ -78,6 +78,7 @@ def main():
     dataset = Noiseprint_Dataset(paths=paths)
     dataset_size = len(dataset)
     model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=17)
+    model.to(dev)
     criterion = NP_Loss(lamda=args.lamda)
     opt = Adam(params=model.parameters(), lr=args.lr, weight_decay=0.0005)
     scheduler = ExponentialLR(opt, gamma=args.gamma)
