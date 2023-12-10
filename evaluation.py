@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 
 from Utils.gutils import Paths
 from DataPrepare.utils import cvt2Intensity
-
+from Model.noiseprint_model import Noise_Print
 
 
 
@@ -27,11 +27,14 @@ def main():
 
     valid_data_path = os.path.join(paths.dataset, "valid")
     img_list = [f for f in os.listdir(valid_data_path) if f.endswith(".png")]
+
     ckp_num = args.ckp_num
     ckp_name = f"ckpoint_{ckp_num}.pt"
     model_path = os.path.join(paths.model, ckp_name)
-    model = torch.load(model_path, map_location=torch.device("cpu"))
-    model.eval()
+    state = torch.load(model_path, map_location=torch.device("cpu"))
+    model = Noise_Print(input_shape=[1,3,48,48], num_layers=17)
+    model.load_state_dict(state['model'])
+    print(f"epoch={ckp_num} loss={state['loss']}")
     res = []
     with torch.no_grad():
         

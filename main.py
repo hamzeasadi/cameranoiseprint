@@ -98,8 +98,9 @@ def main():
             # print(loss.item())
         scheduler.step()
         print(f"epoch={epoch} loss={train_loss:1.4f}")
-
-        torch.save(obj=model.eval(), f=os.path.join(paths.model, f"ckpoint_{epoch}.pt"))
+        info = dict(model=model.eval().state_dict(), loss=train_loss/dataset_size)
+        
+        torch.save(obj=info, f=os.path.join(paths.model, f"ckpoint_{epoch}.pt"))
 
 
 
