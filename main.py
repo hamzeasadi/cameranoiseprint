@@ -9,6 +9,7 @@ import argparse
 import torch
 from torch import nn
 from torch.optim import Adam
+from torch.optim.lr_scheduler import ExponentialLR
 
 from Utils.gutils import Paths
 from Dataset.dataset import create_loader, Noiseprint_Dataset
@@ -65,17 +66,38 @@ def main():
 
     # endregion
 
+    parser = argparse.ArgumentParser(prog=os.path.basename(__file__), description="config for training")
+    parser.add_argument("--lr", type=float, required=True, default=0.01)
+    parser.add_argument("--epochs", type=int, required=True, default=100)
+    parser.add_argument("--gamma", type=float, required=True, default=0.9)
+    parser.add_argument("--lamda", type=float, required=True, default=0.5)
+    args = parser.parse_args()
+
+
     dataset = Noiseprint_Dataset(paths=paths)
+    dataset_size = len(dataset)
     model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=17)
-    criterion = NP_Loss(lamda=0.5)
+    criterion = NP_Loss(lamda=args.lamda)
+    opt = Adam(params=model.parameters(), lr=args.lr, weight_decay=0.0005)
+    scheduler = ExponentialLR(opt, gamma=args.gamma)
+    
+    
+    for epoch in range(args.epochs):
+        model.train()
+        train_loss = 0.0
+        for i in range(dataset_size):
+            X, y = dataset[i]
+            out = model(X)
+            loss = criterion(out, y, psd_flag=True)
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
+            train_loss += loss.item()
+        
+        scheduler.step()
+        print(f"epoch={epoch} loss={train_loss:1.4f}")
 
-    model.train()
-
-    X, y = dataset[0]
-    out = model(X)
-    loss = criterion(out, y, psd_flag=True)
-    print(out.shape)
-    print(loss)
+        torch.save(obj=model.eval(), f=os.path.join(paths.model, f"ckpoint_{epoch}.pt"))
 
 
 
