@@ -33,8 +33,8 @@ class Noise_Print(nn.Module):
         self.mid_blk = self._mid_blk()
 
         self.head = nn.Sequential(
-                nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, stride=1, padding=1),
-                nn.Sigmoid()
+                nn.Conv2d(in_channels=64, out_channels=1, kernel_size=3, stride=1, padding=1)
+                # nn.Sigmoid()
         )
 
 
