@@ -46,9 +46,9 @@ def main():
             res.append(out.cpu().detach().squeeze().numpy())
     
     fig, axs = plt.subplots(nrows=1, ncols=2)
-    axs[0].imshow(res[0])
+    axs[0].imshow(res[0], cmap='gray')
     axs[0].axis("off")
-    axs[1].imshow(res[1])
+    axs[1].imshow(res[1], cmap='gray')
     axs[1].axis("off")
     save_path = os.path.join(paths.report, f"res_{ckp_num}.png")
     fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
