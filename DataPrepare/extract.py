@@ -68,23 +68,12 @@ class DataExtract:
 
 
 
-def cvt2Intensity(img:Image, crop_size:Tuple):
-    """
-    convert RGB to intensity
-    args:
-        img: the PIL image object
-        crop_size: the size of crop:(topleft_corner_h, topleft_corner_w, bottomright_corner_h, bottomright_corner_w)
-    returns:
-        crop_y: an crop with specified size and only intensity channel
-    """
-    crop = img.crop(box=crop_size)
 
-    if crop.mode != "RGB":
-        crop = crop.convert("RGB")
 
-    crop_np = np.asarray(crop).astype(np.float32)
-    crop_y = (0.299 * crop_np[:, :, 0] + 0.587 * crop_np[:, :, 1] + 0.114 * crop_np[:, :, 2])/255.0
-    return crop_y
+
+
+
+
 
 
 
@@ -103,12 +92,6 @@ class Create_samples:
 def main():
     """docs"""
     paths = Paths()
-    
-    # cam_path = "/home/hasadi/project/cameranoiseprint/data/dataset/socraties/videos/176_Sony Xperia Z3"
-    # get_frames(cam_path=cam_path, paths=paths)
-    
-    # root = "/home/hasadi/project/cameranoiseprint/data/dataset/socraties/videos"
-    # get_sim_cams(root=root, paths=paths)
 
     data_extract = DataExtract(paths=paths)
     data_extract.get_frames(dataset_name="socraties")

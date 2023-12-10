@@ -7,12 +7,13 @@ import os
 from typing import Tuple
 from typing import List
 
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
-from DataPrepare.data_info import NoiseprintSampler
-from Utils.gutils import Paths
+
+from Utils.gutils import Paths, load_pickle
 
 
 
@@ -22,23 +23,49 @@ class Noiseprint_Dataset(Dataset):
     """
     noiseprint dataset
     """
-    def __init__(self, paths:Paths, general_crop_size:dict, dataset_name:str="socraties", num_stack:int=3, num_videos:int=4) -> None:
+    def __init__(self, paths:Paths, dataset_name:str="48x48xs") -> None:
         super().__init__()
-        dataset_sampler = NoiseprintSampler(paths=paths, dataset_name=dataset_name, 
-                                            crop_size=general_crop_size, num_videos=num_videos, num_stack=num_stack)
-        self.samples = dataset_sampler.get_all_samples()
-        self.sampler = dataset_sampler._get_cam_crop
-        self.num_videos = num_videos
-    
+        self.dataset_path = os.path.join(paths.dataset, dataset_name)
+        self.cam_names = os.listdir(self.dataset_path)
+        self.cam_info = self.get_caminfo()
+        
+
+    def get_caminfo(self):
+        cam_info = dict()
+        for cam_name in self.cam_names:
+            cam_path = os.path.join(self.dataset_path, cam_name)
+            crops = [f for f in os.listdir(cam_path) if f.startswith("crop_")]
+            num_crops = len(crops)
+            cam_info[cam_name] = num_crops
+        return cam_info
+
+    def get_sample(self):
+        x_list = []
+        y_list = []
+        for cam_name, num_crops in self.cam_info.items():
+            crop_idx = int(np.random.random()*10000)%num_crops
+            crop_path = os.path.join(self.dataset_path, cam_name, f"crop_{crop_idx}")
+            patches = [f for f in os.listdir(crop_path) if f.startswith("patch_")]
+            patchs_idx = np.random.randint(low=0, high=12, size=(4,))
+            for i, patch_idx in enumerate(patchs_idx):
+                patch_path = os.path.join(crop_path, patches[patch_idx])
+                data = load_pickle(file_path=patch_path)
+                x_list.append(torch.from_numpy(data['crop']).unsqueeze(dim=0))
+                y_list.append(data['label'])
+        X = torch.cat(x_list, dim=0)
+        y = torch.tensor(y_list)
+        return X, y
+        
+
     def __len__(self):
-        return len(self.samples)
+        return 1000
     
 
     def __getitem__(self, index):
-        sample_info = self.samples[index]
-        sample_x = self.sampler(cam_name=sample_info[0], crop_size=sample_info[1])
+        
+        X, y = self.get_sample()
 
-        return sample_x, torch.ones(size=(self.num_videos, 1))*sample_info[-1]
+        return X, y
     
 
 
@@ -58,10 +85,9 @@ def custome_collate(data):
 def create_loader(dataset:str=None, batch_size:int=10):
     if dataset is None:
         paths = Paths()
-        crop_size = dict(topleftcorner_x=None, topleftcorner_y=None, h=64, w=64)
-        dataset = Noiseprint_Dataset(paths=paths, general_crop_size=crop_size)
+        dataset = Noiseprint_Dataset(paths=paths, dataset_name="48x48xs")
     
-    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, collate_fn=custome_collate, num_workers=2)
+    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=2)
     return loader
 
 
@@ -73,11 +99,16 @@ def main():
     paths = Paths()
     crop_size = dict(topleftcorner_x=None, topleftcorner_y=None, h=64, w=64)
 
-    dataset = Noiseprint_Dataset(paths=paths, general_crop_size=crop_size)
-    # print(dataset.samples) 
+    dataset = Noiseprint_Dataset(paths=paths, dataset_name="asqar")
     
-    for i in range(len(dataset)):
-        pass
+    # x, y = dataset[0]
+
+    # print(x.shape)
+    # print(y.shape)
+    # print(y)
+
+    for i in range(10):
+        print(np.random.random())
 
 
 
