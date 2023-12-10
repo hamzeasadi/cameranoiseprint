@@ -95,7 +95,7 @@ def main():
             loss.backward()
             opt.step()
             train_loss += loss.item()
-        
+            print(loss.item())
         scheduler.step()
         print(f"epoch={epoch} loss={train_loss:1.4f}")
 
