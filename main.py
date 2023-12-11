@@ -81,8 +81,8 @@ def main():
     model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=15)
     model.to(dev)
     criterion = NP_Loss(lamda=args.lamda)
-    # opt = Adam(params=model.parameters(), lr=args.lr, weight_decay=0.0005)
-    opt = SGD(params=model.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0001)
+    opt = Adam(params=model.parameters(), lr=args.lr, weight_decay=0.0001)
+    # opt = SGD(params=model.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0001)
     scheduler = ExponentialLR(opt, gamma=args.gamma)
     
     
