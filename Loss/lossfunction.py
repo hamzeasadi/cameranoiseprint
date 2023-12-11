@@ -91,7 +91,7 @@ class NP_Loss(nn.Module):
         k = h*w
         dft = torch.fft.fft2(x)
         avgpsd =  torch.mean(torch.mul(dft, dft.conj()).real, dim=0)
-        loss_psd = torch.clamp((1/k)*torch.sum(torch.log(avgpsd)) - torch.log((1/k)*torch.sum(avgpsd)), min=torch.tensor(0), max=torch.tensor(100.0))
+        loss_psd = torch.clamp((1/k)*torch.sum(torch.log(avgpsd)) - torch.log((1/k)*torch.sum(avgpsd)), min=0.0, max=100.0)
         return loss_psd
 
 
