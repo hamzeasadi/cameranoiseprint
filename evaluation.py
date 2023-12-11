@@ -32,7 +32,7 @@ def main():
     ckp_name = f"ckpoint_{ckp_num}.pt"
     model_path = os.path.join(paths.model, ckp_name)
     state = torch.load(model_path, map_location=torch.device("cpu"))
-    model = Noise_Print(input_shape=[1,3,48,48], num_layers=17)
+    model = Noise_Print(input_shape=[1,3,48,48], num_layers=15)
     model.load_state_dict(state['model'])
     print(f"epoch={ckp_num} loss={state['loss']}")
     res = []
