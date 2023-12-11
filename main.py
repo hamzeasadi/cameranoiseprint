@@ -71,6 +71,7 @@ def main():
     parser.add_argument("--epochs", type=int, required=True, default=100)
     parser.add_argument("--gamma", type=float, required=True, default=0.9)
     parser.add_argument("--lamda", type=float, required=True, default=0.5)
+    parser.add_argument("--psd", action=argparse.BooleanOptionalAction, default=True, required=True)
     args = parser.parse_args()
 
     dev = torch.device("cuda")
@@ -91,7 +92,7 @@ def main():
         for i in range(dataset_size):
             X, y = dataset[i]
             out = model(X.to(dev))
-            loss = criterion(out, y.to(dev), psd_flag=True)
+            loss = criterion(out, y.to(dev), psd_flag=args.psd)
             opt.zero_grad()
             loss.backward()
             opt.step()
