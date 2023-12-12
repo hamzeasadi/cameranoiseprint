@@ -72,13 +72,24 @@ def main():
     parser.add_argument("--gamma", type=float, required=True, default=0.9)
     parser.add_argument("--lamda", type=float, required=True, default=0.5)
     parser.add_argument("--psd", action=argparse.BooleanOptionalAction, default=True, required=True)
+    parser.add_argument("--ckp_num", default=0, type=int)
     args = parser.parse_args()
 
     dev = torch.device("cuda")
 
     dataset = Noiseprint_Dataset(paths=paths)
     dataset_size = len(dataset)
+
+    
+    ckp_num = args.ckp_num
+    ckp_name = f"ckpoint_{ckp_num}.pt"
+    model_path = os.path.join(paths.model, ckp_name)
+
     model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=15)
+    if args.ckp_num != 0:
+        state = torch.load(model_path, map_location=torch.device("cpu"))
+        model.load_state_dict(state['model'])
+        
     model.to(dev)
     criterion = NP_Loss(lamda=args.lamda)
     opt = Adam(params=model.parameters(), lr=args.lr, weight_decay=0.0001)
