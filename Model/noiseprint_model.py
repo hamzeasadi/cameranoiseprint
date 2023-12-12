@@ -58,7 +58,11 @@ class Noise_Print(nn.Module):
         return out
 
 
-
+class RGAN(nn.Module):
+    """docs"""
+    def __init__(self, input_shape:List, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        
 
 
 
