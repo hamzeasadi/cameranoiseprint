@@ -26,7 +26,14 @@ def main():
     args = parser.parse_args()
 
     valid_data_path = os.path.join(paths.dataset, "valid")
-    img_list = [f for f in os.listdir(valid_data_path) if f.endswith(".png")]
+    img_list = []
+    for i in range(3):
+        img_path = os.path.join(valid_data_path, f"img_{i:08d}.png")
+        img = Image.open(img_path)
+        img_y = cvt2Intensity(img=img)
+        img_list.append(torch.from_numpy(img_y).unsqueeze(dim=0).unsqueeze(dim=0))
+    
+    X = torch.cat(img_list, dim=1)
 
     ckp_num = args.ckp_num
     ckp_name = f"ckpoint_{ckp_num}.pt"
@@ -38,23 +45,24 @@ def main():
     res = []
     with torch.no_grad():
         
-        for img_name in img_list:
-            # img_path = "/home/hasadi/project/noiseprintPro/data/images/inpainting.png"
-            img_path = os.path.join(valid_data_path, img_name)
-            img = Image.open(img_path)
-            img_np = cvt2Intensity(img=img)
-            img_t = torch.from_numpy(img_np).unsqueeze(dim=0)
-            img_t = img_t.repeat(repeats=[3, 1, 1])
-            out = model(img_t.unsqueeze(dim=0))
-            res.append(out.cpu().detach().squeeze().numpy())
+    # for img_name in img_list:
+        # img_path = "/home/hasadi/project/noiseprintPro/data/images/inpainting.png"
+        # img_path = os.path.join(valid_data_path, img_name)
+        # img = Image.open(img_path)
+        # img_np = cvt2Intensity(img=img)
+        # img_t = torch.from_numpy(img_np).unsqueeze(dim=0)
+        # img_t = img_t.repeat(repeats=[3, 1, 1])
+        out = model(X)
+        res.append(out.cpu().detach().squeeze().numpy())
     
-    fig, axs = plt.subplots(nrows=1, ncols=2)
-    axs[0].imshow(res[0], cmap='gray')
-    axs[0].axis("off")
-    axs[1].imshow(res[1], cmap='gray')
-    axs[1].axis("off")
+    # fig, axs = plt.subplots(nrows=1, ncols=2)
+    # axs[0].imshow(res[0], cmap='gray')
+    # axs[0].axis("off")
+    # axs[1].imshow(res[1], cmap='gray')
+    # axs[1].axis("off")
+    plt.imshow(out, cmap='gray')
     save_path = os.path.join(paths.report, f"res_{ckp_num}.png")
-    fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
+    plt.savefig(save_path, bbox_inches='tight', pad_inches=0)
     plt.close()
 
 
