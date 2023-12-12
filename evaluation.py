@@ -28,7 +28,7 @@ def main():
     valid_data_path = os.path.join(paths.dataset, "valid")
     img_list = []
     for i in range(3):
-        img_path = os.path.join(valid_data_path, f"img_{i:08d}.png")
+        img_path = os.path.join(valid_data_path, f"img_{i+1:08d}.png")
         img = Image.open(img_path)
         img_y = cvt2Intensity(img=img)
         img_list.append(torch.from_numpy(img_y).unsqueeze(dim=0).unsqueeze(dim=0))
