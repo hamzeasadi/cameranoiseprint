@@ -36,7 +36,7 @@ class Noiseprint_Dataset(Dataset):
             cam_path = os.path.join(self.dataset_path, cam_name)
             crops = [f for f in os.listdir(cam_path) if f.startswith("crop_")]
             num_crops = len(crops)
-            idxx = np.random.randint(low=0, high=1000, size=(20000, ))
+            idxx = np.random.randint(low=0, high=1000, size=(2000, ))
             cam_info[cam_name] = (num_crops, idxx)
         return cam_info
 
@@ -61,7 +61,7 @@ class Noiseprint_Dataset(Dataset):
         
 
     def __len__(self):
-        return 20000
+        return 2000
     
 
     def __getitem__(self, index):
