@@ -53,7 +53,8 @@ def main():
         # img_t = torch.from_numpy(img_np).unsqueeze(dim=0)
         # img_t = img_t.repeat(repeats=[3, 1, 1])
         out = model(X)
-        res.append(out.cpu().detach().squeeze().numpy())
+        # res.append(out.cpu().detach().squeeze().numpy())
+        res = out.cpu().detach().squeeze().numpy()
     
     # fig, axs = plt.subplots(nrows=1, ncols=2)
     # axs[0].imshow(res[0], cmap='gray')
