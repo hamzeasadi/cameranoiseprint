@@ -46,8 +46,7 @@ class Noiseprint_Dataset(Dataset):
         for cam_name in self.cam_info:
             num_crops = self.cam_info[cam_name][0]
             idxx = self.cam_info[cam_name][1]
-            crop_idxx = idxx[idx]%num_crops
-            crop_idx = idxx[crop_idxx]
+            crop_idx = idxx[idx]%num_crops
             crop_path = os.path.join(self.dataset_path, cam_name, f"crop_{crop_idx}")
             patches = [f for f in os.listdir(crop_path) if f.startswith("patch_")]
             patchs_idx = np.random.randint(low=0, high=12, size=(4,))
