@@ -36,14 +36,18 @@ class Noiseprint_Dataset(Dataset):
             cam_path = os.path.join(self.dataset_path, cam_name)
             crops = [f for f in os.listdir(cam_path) if f.startswith("crop_")]
             num_crops = len(crops)
-            cam_info[cam_name] = num_crops
+            idxx = np.random.randint(low=0, high=1000, size=(20000, ))
+            cam_info[cam_name] = (num_crops, idxx)
         return cam_info
 
-    def get_sample(self):
+    def get_sample(self, idx):
         x_list = []
         y_list = []
-        for cam_name, num_crops in self.cam_info.items():
-            crop_idx = int(np.random.random()*10000)%num_crops
+        for cam_name in self.cam_info:
+            num_crops = self.cam_info[cam_name][0]
+            idxx = self.cam_info[cam_name][1]
+            crop_idxx = idxx[idx]%num_crops
+            crop_idx = idxx[crop_idxx]
             crop_path = os.path.join(self.dataset_path, cam_name, f"crop_{crop_idx}")
             patches = [f for f in os.listdir(crop_path) if f.startswith("patch_")]
             patchs_idx = np.random.randint(low=0, high=12, size=(4,))
@@ -58,12 +62,12 @@ class Noiseprint_Dataset(Dataset):
         
 
     def __len__(self):
-        return 1000
+        return 20000
     
 
     def __getitem__(self, index):
         
-        X, y = self.get_sample()
+        X, y = self.get_sample(idx=index)
 
         return X, y
     
