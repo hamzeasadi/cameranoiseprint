@@ -103,7 +103,7 @@ def main():
         for i in range(dataset_size):
             X, y = dataset[i]
             out = model(X.to(dev))
-            loss = criterion(out, y.to(dev), psd_flag=args.psd)
+            loss = criterion(out, y.to(dev), psd_flag=args.psd, epoch=epoch)
             opt.zero_grad()
             loss.backward()
             opt.step()
