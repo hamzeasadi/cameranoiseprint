@@ -104,7 +104,7 @@ def main():
     else:
         disc_scheduler = None
     
-    for epoch in range(args.epochs):
+    for epoch in range(config["epochs"]):
         out_state = train_step_gan(
                         gen=gen, disc=disc, loader=loaders, opt_disc=disc_opt, opt_gen=gen_opt, epoch=epoch,
                         dev=dev, gen_crt=gen_crt, disc_crt=disc_crt, gen_schedure=gen_scheduler,
