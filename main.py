@@ -14,9 +14,9 @@ from torch.optim.lr_scheduler import ExponentialLR
 
 from Utils.gutils import Paths
 from Dataset.dataset import create_loaders
-from Model.noiseprint_model import Noise_Print
+from Model.noiseprint_model import Noise_Print, RDisc
 from Loss.lossfunction import NP_Loss
-from Engine.engine import train_step_np
+from Engine.engine import train_step_np, train_step_gan
 
 
 
@@ -75,25 +75,41 @@ def main():
         config = json.load(config_file)
 
     dev = torch.device("cuda")
-    model = Noise_Print(input_shape=[1, 3, 64, 64], num_layers=15)
+    gen = Noise_Print(input_shape=[1, 3, 64, 64], num_layers=15)
+    disc = RDisc(input_shape=[1,1,64,64])
     if config['ckp_num'] is not None:
         ckp_num = config['ckp_num']
         ckp_name = f"ckpoint_{ckp_num}.pt"
         model_path = os.path.join(paths.model, ckp_name)
         state = torch.load(model_path, map_location=torch.device("cpu"))
-        model.load_state_dict(state['model'])
+        gen.load_state_dict(state['model'])
         
-    model.to(dev)
-    criterion = NP_Loss(lamda=config['lamda'], scale=config['scale'])
+    gen.to(dev)
+    disc.to(dev)
+    gen_crt = NP_Loss(lamda=config['lamda'], scale=config['scale'])
+    disc_crt = nn.BCEWithLogitsLoss()
+
     loaders = create_loaders(dataset_name="64x64s")
-    opt = Adam(params=model.parameters(), lr=config['lr'], weight_decay=0.0005)
-    if config['sch'] is not None:
-        scheduler = ExponentialLR(opt, gamma=config['gamma'])
+    gen_opt = Adam(params=gen.parameters(), lr=config['gen_lr'], weight_decay=0.0005)
+    disc_opt = Adam(params=disc.parameters(), lr=config['dis_lr'], weight_decay=0.0005)
+
+    if config['gen_sch'] is not None:
+        gen_scheduler = ExponentialLR(gen_opt, gamma=config['gen_gamma'])
     else:
-        scheduler = None
+        gen_scheduler = None
+    
+
+    if config['dis_sch'] is not None:
+        disc_scheduler = ExponentialLR(gen_opt, gamma=config['dis_gamma'])
+    else:
+        disc_scheduler = None
     
     for epoch in range(args.epochs):
-        out_state = train_step_np(model=model, loader=loaders, opt=opt, crt=criterion, epoch=epoch, dev=dev, scheduler=scheduler)
+        out_state = train_step_gan(
+                        gen=gen, disc=disc, loader=loaders, opt_disc=disc_opt, opt_gen=gen_opt, epoch=epoch,
+                        dev=dev, gen_crt=gen_crt, disc_crt=disc_crt, gen_schedure=gen_scheduler,
+                        disc_scheduler=disc_scheduler)
+        
         print(out_state)
 
 
