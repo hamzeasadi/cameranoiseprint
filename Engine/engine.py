@@ -72,16 +72,22 @@ def train_step_gan(
 
         (real_idx, real_label), (fake_idx, fake_label) = fake_real_idx()
         real_img = gen_out[real_idx].detach()
-        fake_img = gen_out[fake_idx]
+        fake_img = gen_out[fake_idx].detach()
 
         real_prd = disc(real_img)
         fake_prd = disc(fake_img)
         disc_loss = disc_crt(real_prd.squeeze() - fake_prd.squeeze(), real_label.to(dev))
         opt_disc.zero_grad()
-        disc_loss.backward(retain_graph=True)
+        disc_loss.backward()
         opt_disc.step()
 
-        disc_loss = disc_crt(fake_prd.squeeze()-real_prd.squeeze(), real_label.to(dev))
+
+        real_img = gen_out[real_idx]
+        fake_img = gen_out[fake_idx]
+        real_prd = disc(real_img)
+        fake_prd = disc(fake_img)
+        disc_loss = disc_crt(fake_prd.squeeze() - real_prd.squeeze(), real_label.to(dev))
+
         gen_loss = gen_crt(embeddings=gen_out, labels=y.to(dev))
         loss = gen_loss + disc_loss
         opt_gen.zero_grad()
@@ -98,6 +104,8 @@ def train_step_gan(
     if disc_scheduler is not None:
         disc_scheduler.step()
 
+    stat_dict = dict(model=gen.eval().state_dict(), loss=train_loss/num_batches, dis_loss=dis_loss, epoch=epoch)
+    torch.save(obj=stat_dict, f=os.path.join(paths.model, f"ganchpoint_{epoch}.pt"))
     return dict(loss=train_loss, disc=disc_loss, epoch=epoch)
 
     
