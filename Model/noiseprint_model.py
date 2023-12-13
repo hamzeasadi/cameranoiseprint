@@ -72,8 +72,10 @@ class RDisc(nn.Module):
                             self.disc_blk(inch=32, outch=64),
                             self.disc_blk(inch=64, outch=128))
         self.flatten = nn.Flatten()
-        d_size = (input_shape[2]//2**4)**2
-        self.fc = nn.Linear(in_features=d_size*128, out_features=1)
+        self.avg = nn.AvgPool2d(kernel_size=2, stride=2)
+        # d_size = (input_shape[2]//2**4)**2
+        d_size = 4*128
+        self.fc = nn.Linear(in_features=d_size, out_features=1)
 
 
     def disc_blk(self, inch:int, outch:int, bn:bool=True):
@@ -85,6 +87,7 @@ class RDisc(nn.Module):
 
     def forward(self, x):
         out = self.bb(x)
+        out = self.avg(out)
         out = self.flatten(out)
         out = self.fc(out)
         return out
@@ -105,8 +108,8 @@ def main():
     disc = RDisc(input_shape=[1,1,64,64])
     out = model(x)
     dist_out = disc(out)
-    print(out.shape)
     print(dist_out.shape)
+    # print(dist_out.shape)
 
 
 

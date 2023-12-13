@@ -75,7 +75,7 @@ def main():
         config = json.load(config_file)
 
     dev = torch.device("cuda")
-    model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=15)
+    model = Noise_Print(input_shape=[1, 3, 64, 64], num_layers=15)
     if config['ckp_num'] is not None:
         ckp_num = config['ckp_num']
         ckp_name = f"ckpoint_{ckp_num}.pt"
