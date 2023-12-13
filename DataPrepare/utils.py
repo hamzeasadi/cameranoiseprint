@@ -67,52 +67,78 @@ def get_cam_samples(cam_path, num_samples:int):
             sample = [frame0_path, frame1_path, frame2_path]
             All_Triplets.append(sample)
     
-    print(f"{cam_path}: {len(All_Triplets)}")
+    num_all_samples = len(All_Triplets)
+    print(f"{cam_path}: {num_all_samples}")
     random.shuffle(All_Triplets)
-    sub_samples = random.sample(All_Triplets, num_samples)
+    num_subsample = min(num_all_samples, num_samples)
+    sub_samples = random.sample(All_Triplets, num_subsample)
     subsize = len(sub_samples)
-    for i in range(0, subsize, 4):
+    for i in range(0, subsize-3, 4):
         sub0 = sub_samples[i]
         sub1 = sub_samples[i+1]
         sub2 = sub_samples[i+2]
         sub3 = sub_samples[i+3]
         sample_info[i//4] = (sub0, sub1, sub2, sub3)
-    
+
     return sample_info
 
 
 
 
-def extract_cam_samples(cam_path:str, cam_id:int, crop_size:List):
+def pack3frame(frame_path_list:List):
+    frames = []
+    for frame_path in frame_path_list:
+        frame = Image.open(frame_path)
+        frame_y = cvt2Intensity(img=frame)
+        frames.append(np.expand_dims(frame_y, axis=0))
+    
+    pack = np.concatenate(frames, axis=0)
+    return pack
+    
+
+
+
+def patcing(img:np.ndarray, crop_size:List, base_path:str, label:int, sample_cntr:int):
+    hc, wc = crop_size
+    c, h, w = img.shape
+    num_h = h//hc
+    num_w = w//wc
+    crop_cntr = 0
+    for i in range(num_h):
+        hi = i*hc
+        for j in range(num_w):
+            wj = j*wc
+            crop = img[:, hi:hi+hc, wj:wj+wc]
+            save_path = os.path.join(base_path, f"crop_{crop_cntr}")
+            if not os.path.exists(save_path):
+                os.makedirs(save_path)
+            data = dict(crop=crop, label=label)
+            file_name = f"patch_{sample_cntr}.pkl"
+            sample_cntr += 1
+            crop_cntr += 1
+            save_as_pickle(save_path=save_path, filename=file_name, data=data)
+
+    return sample_cntr
+
+
+
+
+def extract_cam_samples(cam_path:str, cam_id:int, ns:int, crop_size:List, base_save_path:str):
     """docs"""
-    
+    sample_counter = 0
+    cam_save_path = os.path.join(base_save_path, f"{cam_id}")
+    cam_sample_info = get_cam_samples(cam_path=cam_path, num_samples=ns)
+    for smpl_idx in cam_sample_info:
+        sample = cam_sample_info[smpl_idx]
+        for sub_sample in sample:
+            stack = pack3frame(frame_path_list=sub_sample)
+            sample_counter = patcing(img=stack, crop_size=crop_size, base_path=cam_save_path, label=cam_id, sample_cntr=sample_counter)
 
 
 
 
 
 
-def patchify(img_path, crop_size:List):
-    img = Image.open(img_path)
-    w, h = img.size
-    img_y = cvt2Intensity(img=img)
-    plt.imshow(img_y, cmap='gray')
-    plt.axis("off")
-    # hc, wc = crop_size
-    # num_h = h//hc
-    # num_w = w//wc
-    # fig, axs = plt.subplots(nrows=num_w, ncols=num_h)
-    # for i in range(num_h):
-    #     hi = i*hc
-    #     for j in range(num_w):
-    #         wi = j*wc
-    #         crop = img_y[hi:hi+hc, wi:wi+wc]
-    #         axs[j, i].imshow(crop, cmap='gray')
-    #         axs[j, i].axis("off")
-    
-   
-    plt.savefig("patchify.png", bbox_inches='tight', pad_inches=0, transparent = True)
-    plt.close()
 
 
 
@@ -122,11 +148,16 @@ def main():
     """
     root_path = "/mnt/exthd/Dataset/frames"
     paths = Paths()
-    img_base = "/mnt/exthd/Dataset/frames/100/Eurecom_100_video_001.mp4"
-    img_path = os.path.join(img_base, f"img_{1:08d}.png")
-    patchify(img_path=img_path, crop_size=[64, 64])
-    # get_cam_samples(cam_path=os.path.join(root_path, f"{100}"), num_samples=100)
-
+    crop_size = [64, 64]
+    ns = 400
+    base_save_path = "/mnt/exthd/Dataset/All_crops/64x64xs"
+    camera_names = [int(f) for f in os.listdir(root_path)]
+    
+    for camera_name in camera_names:
+        camera_path = os.path.join(root_path, f"{camera_name}")
+        extract_cam_samples(cam_path=camera_path, cam_id=camera_name, ns=ns, crop_size=crop_size, base_save_path=base_save_path)
+        # break
+    
     
 
 

@@ -5,7 +5,7 @@ docs
 
 import os
 from typing import Tuple
-from typing import List
+from typing import List, Dict
 
 import numpy as np
 import torch
@@ -18,58 +18,47 @@ from Utils.gutils import Paths, load_pickle
 
 
 
+class Cam_Dataset(Dataset):
 
-class Noiseprint_Dataset(Dataset):
-    """
-    noiseprint dataset
-    """
-    def __init__(self, paths:Paths, dataset_name:str="48x48xs") -> None:
+    def __init__(self, dataset_name:str, cam_name:str, paths:Paths) -> None:
         super().__init__()
-        self.dataset_path = os.path.join(paths.dataset, dataset_name)
-        self.cam_names = os.listdir(self.dataset_path)
-        self.cam_info = self.get_caminfo()
-        
+        # self.cam_path:str = os.path.join(paths.dataset, dataset_name, cam_name)
+        self.cam_path = "/mnt/exthd/Dataset/All_crops/64x64xs/104"
+        self.camera_sample_info, self.dataset_size = self.get_samples()
 
-    def get_caminfo(self):
-        cam_info = dict()
-        for cam_name in self.cam_names:
-            cam_path = os.path.join(self.dataset_path, cam_name)
-            crops = [f for f in os.listdir(cam_path) if f.startswith("crop_")]
-            num_crops = len(crops)
-            idxx = np.random.randint(low=0, high=1000, size=(20000, ))
-            cam_info[cam_name] = (num_crops, idxx)
-        return cam_info
+    def get_samples(self):
+        cam_samples:Dict = dict()
+        sample_counter = 0
+        crops = [f for f in os.listdir(self.cam_path) if f.startswith("crop_")]
+        for crop_name in crops:
+            crop_path = os.path.join(self.cam_path, crop_name)
+            crop_imgs = [f for f in os.listdir(crop_path) if f.endswith(".pkl")]
+            num_crops = len(crop_imgs)
+            for i in range(0, num_crops-3, 4):
+                crop0_path = os.path.join(crop_path, crop_imgs[i])
+                crop1_path = os.path.join(crop_path, crop_imgs[i+1])
+                crop2_path = os.path.join(crop_path, crop_imgs[i+2])
+                crop3_path = os.path.join(crop_path, crop_imgs[i+3])
+                cam_samples[sample_counter] = (crop0_path, crop1_path, crop2_path, crop3_path)
+                sample_counter += 1
+        return cam_samples, sample_counter
 
-    def get_sample(self, idx):
-        x_list = []
-        y_list = []
-        for cam_name in self.cam_info:
-            num_crops = self.cam_info[cam_name][0]
-            idxx = self.cam_info[cam_name][1]
-            crop_idx = idxx[idx]%num_crops
-            crop_path = os.path.join(self.dataset_path, cam_name, f"crop_{crop_idx}")
-            patches = [f for f in os.listdir(crop_path) if f.startswith("patch_")]
-            patchs_idx = np.random.randint(low=0, high=12, size=(4,))
-            for i, patch_idx in enumerate(patchs_idx):
-                patch_path = os.path.join(crop_path, patches[patch_idx])
-                data = load_pickle(file_path=patch_path)
-                x_list.append(torch.from_numpy(data['crop']).unsqueeze(dim=0))
-                y_list.append(data['label'])
-        X = torch.cat(x_list, dim=0)
-        y = torch.tensor(y_list)
-        return X, y
-        
 
     def __len__(self):
-        return 20000
+        return self.dataset_size
     
 
     def __getitem__(self, index):
-        
-        X, y = self.get_sample(idx=index)
+        sample_info = self.camera_sample_info[index]
+        X_list, y_list = [], []
+        for crop_info in sample_info:
+            data = load_pickle(crop_info)
+            X_list.append(torch.from_numpy(data['crop']).unsqueeze(dim=0))
+            y_list.append(torch.tensor(data['label']))
+        X = torch.cat(X_list, dim=0)
+        return X, torch.tensor(y_list)
 
-        return X, y
-    
+
 
 
 
@@ -85,13 +74,35 @@ def custome_collate(data):
 
 
 
-def create_loader(dataset:str=None, batch_size:int=10):
-    if dataset is None:
-        paths = Paths()
-        dataset = Noiseprint_Dataset(paths=paths, dataset_name="48x48xs")
+
+
+def create_loaders(dataset_name:str, paths:Paths):
+    root_path = os.path.join(paths.dataset, dataset_name)
+    cam_names = os.listdir(root_path)
+    cam_loaders = []
+    for cam_name in cam_names:
+        dataset = Cam_Dataset(dataset_name=dataset_name, cam_name=cam_name, paths=paths)
+        loader = DataLoader(dataset=dataset, shuffle=True, batch_size=1)
+        cam_loaders.append(loader)
     
-    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=2)
-    return loader
+    return cam_loaders
+
+
+
+
+def create_batch(batch):
+    """docs"""
+
+
+
+
+# def create_loader(dataset:str=None, batch_size:int=10):
+#     if dataset is None:
+#         paths = Paths()
+#         dataset = Noiseprint_Dataset(paths=paths, dataset_name="48x48xs")
+    
+#     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=2)
+#     return loader
 
 
 
@@ -102,19 +113,21 @@ def main():
     paths = Paths()
     crop_size = dict(topleftcorner_x=None, topleftcorner_y=None, h=64, w=64)
 
-    dataset = Noiseprint_Dataset(paths=paths, dataset_name="asqar")
     
-    # x, y = dataset[0]
-
-    # print(x.shape)
-    # print(y.shape)
-    # print(y)
-
-    for i in range(10):
-        print(np.random.random())
-
-
-
+    cam_dataset = Cam_Dataset(dataset_name="64x64xs", cam_name="104", paths=paths)
+    cam_dataset1 = Cam_Dataset(dataset_name="64x64xs", cam_name="104", paths=paths)
+    loader0 = DataLoader(dataset=cam_dataset, shuffle=True, batch_size=1)
+    loader1 = DataLoader(dataset=cam_dataset1, shuffle=True, batch_size=1)
+    loaders = [loader0, loader1]
+    xx = []
+    yy = []
+    for batch in zip(*loaders):
+        for sbatch in batch:
+            xx.append(sbatch[0])
+            yy.append(sbatch[1])
+        print(xx)
+        print(yy)
+        break
 
 
 
