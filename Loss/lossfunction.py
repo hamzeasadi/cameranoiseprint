@@ -60,11 +60,11 @@ class NP_Loss(nn.Module):
         super().__init__(*args, **kwargs)
         self.lamda = lamda
     
-    def forward(self, embeddings:torch.Tensor, labels:torch.Tensor, psd_flag:bool=True):
+    def forward(self, embeddings:torch.Tensor, labels:torch.Tensor, psd_flag:bool=True, epoch=1):
         b, c, _, _ = embeddings.shape
         loss = 0.0
         if psd_flag:
-            loss += (-self.lamda * self.psd(embeddings=embeddings))
+            loss += (-self.lamda * epoch * self.psd(embeddings=embeddings))
         embeddings = embeddings.view(b, -1)
         labels = labels.squeeze()
         num_lbls = labels.size()[0]
