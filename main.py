@@ -92,7 +92,7 @@ def main():
     else:
         scheduler = None
     
-    for epoch in range(args.epochs):
+    for epoch in range(config['epochs']):
         out_state = train_step_np(model=model, loader=loaders, opt=opt, crt=criterion, epoch=epoch, dev=dev, scheduler=scheduler)
         print(out_state)
 
