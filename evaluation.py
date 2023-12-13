@@ -5,6 +5,7 @@ docs
 import os
 import argparse
 
+import numpy as np
 from PIL import Image
 import torch
 from matplotlib import pyplot as plt
@@ -61,7 +62,9 @@ def main():
     # axs[0].axis("off")
     # axs[1].imshow(res[1], cmap='gray')
     # axs[1].axis("off")
-    plt.imshow(res, cmap='gray')
+    vmin = np.min(res[34:-34,34:-34])
+    vmax = np.max(res[34:-34,34:-34])
+    plt.imshow(res.clip(vmin,vmax), clim=[vmin,vmax], cmap='gray')
     plt.axis("off")
     save_path = os.path.join(paths.report, f"res_{ckp_num}.png")
     plt.savefig(save_path, bbox_inches='tight', pad_inches=0)
