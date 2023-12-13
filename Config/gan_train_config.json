@@ -1,0 +1,15 @@
+
+{
+
+    "gen_lr": 0.001,
+    "dis_lr": 0.001,
+    "gen_sch": true,
+    "dis_sch": true,
+    "gen_gamma": 0.9,
+    "dis_gamma": 0.9,
+    "scale": 10.0,
+    "lamda": 10.0,
+    "psd": true,
+    "epochs": 100,
+    "ckp_num": null
+}

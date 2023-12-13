@@ -15,7 +15,7 @@ from Utils.gutils import Paths
 from Dataset.dataset import create_batch
 
 
-
+paths = Paths()
 
 def train_step_np(model:nn.Module, loader:List, opt:Optimizer, crt:nn.Module, epoch:int, dev:torch.device, scheduler=None):
     train_loss = 0.0
@@ -35,6 +35,8 @@ def train_step_np(model:nn.Module, loader:List, opt:Optimizer, crt:nn.Module, ep
     if scheduler is not None:
         scheduler.step()
 
+    stat_dict = dict(model=model.eval().state_dict(), loss=train_loss/num_batches, epoch=epoch)
+    torch.save(obj=stat_dict, f=os.path.join(paths.model, f"npchpoint_{epoch}.pt"))
     return dict(loss=train_loss, epoch=epoch)
 
 

@@ -5,6 +5,7 @@ docs
 
 import os
 import argparse
+import json
 
 import torch
 from torch import nn
@@ -12,10 +13,10 @@ from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import ExponentialLR
 
 from Utils.gutils import Paths
-from Dataset.dataset import create_loader, Noiseprint_Dataset
+from Dataset.dataset import create_loaders
 from Model.noiseprint_model import Noise_Print
 from Loss.lossfunction import NP_Loss
-from Engine.engine import Engine
+from Engine.engine import train_step_np
 
 
 
@@ -67,54 +68,33 @@ def main():
     # endregion
 
     parser = argparse.ArgumentParser(prog=os.path.basename(__file__), description="config for training")
-    parser.add_argument("--lr", type=float, required=True, default=0.01)
-    parser.add_argument("--epochs", type=int, required=True, default=100)
-    parser.add_argument("--gamma", type=float, required=True, default=0.9)
-    parser.add_argument("--lamda", type=float, required=True, default=0.5)
-    parser.add_argument("--psd", action=argparse.BooleanOptionalAction, default=True, required=True)
-    parser.add_argument("--ckp_num", default=0, type=int)
+    parser.add_argument("--config_name", type=str, required=True)
     args = parser.parse_args()
 
+    with open(os.path.join(paths.config, args.config_name)) as config_file:
+        config = json.load(config_file)
+
     dev = torch.device("cuda")
-
-    dataset = Noiseprint_Dataset(paths=paths)
-    dataset_size = len(dataset)
-
-    
-    ckp_num = args.ckp_num
-    ckp_name = f"ckpoint_{ckp_num}.pt"
-    model_path = os.path.join(paths.model, ckp_name)
-
     model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=15)
-    if args.ckp_num != 0:
+    if config['ckp_num'] is not None:
+        ckp_num = config['ckp_num']
+        ckp_name = f"ckpoint_{ckp_num}.pt"
+        model_path = os.path.join(paths.model, ckp_name)
         state = torch.load(model_path, map_location=torch.device("cpu"))
         model.load_state_dict(state['model'])
         
     model.to(dev)
-    criterion = NP_Loss(lamda=args.lamda)
-    opt = Adam(params=model.parameters(), lr=args.lr, weight_decay=0.0001)
-    # opt = SGD(params=model.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.0001)
-    scheduler = ExponentialLR(opt, gamma=args.gamma)
-    
+    criterion = NP_Loss(lamda=config['lamda'], scale=config['scale'])
+    loaders = create_loaders(dataset_name="64x64s")
+    opt = Adam(params=model.parameters(), lr=config['lr'], weight_decay=0.0005)
+    if config['sch'] is not None:
+        scheduler = ExponentialLR(opt, gamma=config['gamma'])
+    else:
+        scheduler = None
     
     for epoch in range(args.epochs):
-        model.train()
-        train_loss = 0.0
-        for i in range(dataset_size):
-            X, y = dataset[i]
-            out = model(X.to(dev))
-            loss = criterion(out, y.to(dev), psd_flag=args.psd)
-            opt.zero_grad()
-            loss.backward()
-            opt.step()
-            train_loss += loss.item()
-            print(loss.item())
-        scheduler.step()
-        print(f"epoch={epoch} loss={train_loss:1.4f}")
-        info = dict(model=model.eval().state_dict(), loss=train_loss/dataset_size)
-        
-        torch.save(obj=info, f=os.path.join(paths.model, f"ckpoint_{epoch}.pt"))
-
+        out_state = train_step_np(model=model, loader=loaders, opt=opt, crt=criterion, epoch=epoch, dev=dev, scheduler=scheduler)
+        print(out_state)
 
 
 
