@@ -61,10 +61,34 @@ class Noise_Print(nn.Module):
 
 
 
-class RGAN(nn.Module):
+class RDisc(nn.Module):
     """docs"""
     def __init__(self, input_shape:List, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+
+        self.bb = nn.Sequential(
+                            self.disc_blk(inch=input_shape[1], outch=16),
+                            self.disc_blk(inch=16, outch=32),
+                            self.disc_blk(inch=32, outch=64),
+                            self.disc_blk(inch=64, outch=128))
+        self.flatten = nn.Flatten()
+        d_size = (input_shape[2]//2**4)**2
+        self.fc = nn.Linear(in_features=d_size*128, out_features=1)
+
+
+    def disc_blk(self, inch:int, outch:int, bn:bool=True):
+        layer = nn.Sequential(
+                            nn.Conv2d(in_channels=inch, out_channels=outch, kernel_size=3, stride=2, padding=1),
+                            nn.LeakyReLU(0.2, inplace=True), nn.Dropout2d(p=0.2), nn.BatchNorm2d(num_features=outch))
+        return layer
+    
+
+    def forward(self, x):
+        out = self.bb(x)
+        out = self.flatten(out)
+        out = self.fc(out)
+        return out
+
         
 
 
@@ -78,11 +102,11 @@ def main():
     x = torch.randn(size=(1, 3, 64, 64))
 
     model = Noise_Print(input_shape=[1,3,64,64], num_layers=15)
-
+    disc = RDisc(input_shape=[1,1,64,64])
     out = model(x)
-    print(model)
-    print(out)
+    dist_out = disc(out)
     print(out.shape)
+    print(dist_out.shape)
 
 
 

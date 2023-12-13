@@ -12,43 +12,6 @@ from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
 
 
-
-
-
-class ExamplePairMiner(BaseMiner):
-    def __init__(self, margin=0.1, **kwargs):
-        super().__init__(**kwargs)
-        self.margin = margin
-
-    def mine(self, embeddings, labels, ref_emb=None, ref_labels=None):
-        mat = self.distance(embeddings, ref_emb)
-        a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
-        return a1, p, a2, n
-
-
-
-
-
-class Loss_Function(nn.Module):
-
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        self.miner = ExamplePairMiner()
-        self.bceloss = nn.BCEWithLogitsLoss()
-
-    def forward(self, embedding, labels):
-        a, p, a1, n = self.miner.mine(embeddings=embedding, labels=labels)
-        A = embedding[a]
-        P = embedding[p]
-        A1 = embedding[a1]
-        N = embedding[n]
-        dist1 = torch.mean(torch.norm(torch.sub(A, P), dim=1))
-        dist2 = torch.norm(torch.sub(A1, N), dim=1)
-        neg_labels = torch.ones_like(dist2, requires_grad=False)
-        loss = 10*self.bceloss(dist2, neg_labels) + dist1
-        
-        return loss
         
 
 
@@ -56,32 +19,39 @@ class NP_Loss(nn.Module):
     """
     noiseprint loss implementation
     """
-    def __init__(self, lamda:float, *args, **kwargs) -> None:
+    def __init__(self, lamda:float=10.0, scale:float=100.0, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.lamda = lamda
-    
+        self.scale = scale
+
     def forward(self, embeddings:torch.Tensor, labels:torch.Tensor, psd_flag:bool=True):
-        b, c, _, _ = embeddings.shape
         loss = 0.0
         if psd_flag:
             loss += (-self.lamda * self.psd(embeddings=embeddings))
-        embeddings = embeddings.view(b, -1)
-        labels = labels.squeeze()
-        num_lbls = labels.size()[0]
-        distance_matrix = torch.cdist(x1=embeddings, x2=embeddings, p=2)
-        distance_matrix = distance_matrix.flatten()[1:].view(num_lbls-1, num_lbls+1)[:,:-1].reshape(num_lbls, num_lbls-1)
-        distance_sm = torch.softmax(input=-distance_matrix, dim=1)
         
-        for i in range(num_lbls):
-            lbl = labels[i]
-            distance_sm_lbl = distance_sm[i]
-            indices = torch.cat((labels[:i], labels[i+1:]), dim=0)
+        loss += self._np_loss(embeddins=embeddings, y=labels, scale=self.scale)
+    
+
+    def _np_loss(self, embeddins:torch.Tensor, y:torch.Tensor, scale:float=100):
+        b, c, _, _ = embeddins.shape
+        np_acc_loss = 0.0
+        embed_flat = embeddins.view(b, -1)
+        y_ = y.squeeze()
+        num_lbl = y_.size()[0]
+        dist_mtx = torch.cdist(x1=embed_flat, x2=embed_flat, p=2)
+        dist_mtx_offdiagnal = dist_mtx.flatten()[1:].view(num_lbl-1, num_lbl+1)[:,:-1].reshape(num_lbl, num_lbl-1)
+        dist_mtx_offdiagnal_sm = torch.softmax(-dist_mtx_offdiagnal, dim=1)
+        for i in range(num_lbl):
+            lbl = y_[i]
+            distance_sm_lbl = dist_mtx_offdiagnal_sm[i]
+            indices = torch.cat((y_[:i], y_[i+1:]), dim=0)
             indices_ind = indices==lbl
             probs = torch.sum(distance_sm_lbl[indices_ind])
-            loss += -torch.log(probs)/200.0
+            np_acc_loss += -torch.log(probs)
         
-        return loss
+        return np_acc_loss/scale
     
+
     def psd(self, embeddings:torch.Tensor):
         """
         docs
@@ -93,6 +63,7 @@ class NP_Loss(nn.Module):
         avgpsd =  torch.mean(torch.mul(dft, dft.conj()).real, dim=0)
         loss_psd = torch.clamp((1/k)*torch.sum(torch.log(avgpsd)) - torch.log((1/k)*torch.sum(avgpsd)), min=0.0, max=100.0)
         return loss_psd
+
 
 
 
@@ -145,14 +116,35 @@ def main():
     """"
     docs
     """
-    # x = torch.randn(size=(10, 1, 48, 48))
-    # y = torch.randint(low=0, high=3, size=(10, 1))
-    # crt = NP_Loss(lamda=0.3)
-    # loss = crt(x, y)
-    # print(loss)
-    x = torch.randn(size=(48, 48))
-    x1, x2 = gen_img(freq=1)
-    psd(x2.unsqueeze(dim=0))
+    x = torch.tensor([[1,2,3,4], [2,1,3,4], [2,2,3,3], [7,8,9,10], [6,8,8,10], [7,7,9,9]], dtype=torch.float32)
+    y = torch.tensor([0,0,0,1,1,1])
+    x_dist = torch.cdist(x1=x, x2=x, p=2)
+    print(x_dist)
+    x_dist = x_dist.flatten()[1:].view(6-1, 6+1)[:,:-1].reshape(6, 6-1)
+    print(x_dist)
+    x_dist_sm = torch.softmax(-x_dist, dim=1)
+    print(x_dist_sm)
+    for i in range(6):
+            print("=="*40)
+            lbl = y[i]
+            distance_sm_lbl = x_dist_sm[i]
+            print(distance_sm_lbl)
+            indices = torch.cat((y[:i], y[i+1:]), dim=0)
+            print(indices)
+            indices_ind = indices==lbl
+            print(indices_ind)
+            probs = torch.sum(distance_sm_lbl[indices_ind])
+            print(probs)
+            # np_acc_loss += -torch.log(probs)
+            # break
+
+    # x = x.view((4, 1, 2, 2))
+    # y = torch.tensor([1,1,0,0])
+    # crt = NP_Loss(lamda=1, scale=1)
+
+    # out = crt._np_loss(embeddins=x, y=y, scale=1)
+
+    # print(out)
 
     
 

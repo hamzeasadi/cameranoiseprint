@@ -22,8 +22,8 @@ class Cam_Dataset(Dataset):
 
     def __init__(self, dataset_name:str, cam_name:str, paths:Paths) -> None:
         super().__init__()
-        # self.cam_path:str = os.path.join(paths.dataset, dataset_name, cam_name)
-        self.cam_path = "/mnt/exthd/Dataset/All_crops/64x64xs/104"
+        self.cam_path:str = os.path.join(paths.dataset, dataset_name, cam_name)
+        # self.cam_path = "/mnt/exthd/Dataset/All_crops/64x64xs/104"
         self.camera_sample_info, self.dataset_size = self.get_samples()
 
     def get_samples(self):
@@ -49,7 +49,7 @@ class Cam_Dataset(Dataset):
     
 
     def __getitem__(self, index):
-        sample_info = self.camera_sample_info[index]
+        sample_info = self.camera_sample_info[index%self.dataset_size]
         X_list, y_list = [], []
         for crop_info in sample_info:
             data = load_pickle(crop_info)
@@ -92,6 +92,17 @@ def create_loaders(dataset_name:str, paths:Paths):
 
 def create_batch(batch):
     """docs"""
+    X = 0.0
+    y = 0.0
+    for i, sbatch in enumerate(batch):
+        if i==0:
+            X = sbatch[0]
+            y = sbatch[1]
+        else:
+            X = torch.cat((X, sbatch[0]), dim=1)
+            y = torch.cat((y, sbatch[1]), dim=1)
+    
+    return X.squeeze(), y.squeeze()
 
 
 
@@ -122,11 +133,9 @@ def main():
     xx = []
     yy = []
     for batch in zip(*loaders):
-        for sbatch in batch:
-            xx.append(sbatch[0])
-            yy.append(sbatch[1])
-        print(xx)
-        print(yy)
+        X, y = create_batch(batch=batch)
+        print(X.shape)
+        print(y)
         break
 
 
