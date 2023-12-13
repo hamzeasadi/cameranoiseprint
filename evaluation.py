@@ -62,6 +62,7 @@ def main():
     # axs[1].imshow(res[1], cmap='gray')
     # axs[1].axis("off")
     plt.imshow(res, cmap='gray')
+    plt.axis("off")
     save_path = os.path.join(paths.report, f"res_{ckp_num}.png")
     plt.savefig(save_path, bbox_inches='tight', pad_inches=0)
     plt.close()
