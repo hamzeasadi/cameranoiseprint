@@ -78,7 +78,7 @@ class NP_Loss(nn.Module):
             indices = torch.cat((labels[:i], labels[i+1:]), dim=0)
             indices_ind = indices==lbl
             probs = torch.sum(distance_sm_lbl[indices_ind])
-            loss += -torch.log(probs)/20.0
+            loss += -torch.log(probs)/200.0
         
         return loss
     
