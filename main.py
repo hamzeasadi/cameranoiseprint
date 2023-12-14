@@ -71,7 +71,7 @@ def main():
             y_pos = torch.zeros_like(out['out0'], requires_grad=False)
             const_loss = crt_sum(out['out0']+out['out1'], y_pos)
             this_label = torch.ones_like(out['out0'], requires_grad=False)
-            another_loss = crt_const(0.1*out['ou0'], this_label)
+            another_loss = crt_const(0.1*out['out0'], this_label)
             loss = loss1 + another_loss + const_loss
 
             opt.zero_grad()
