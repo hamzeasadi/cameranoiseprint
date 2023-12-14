@@ -13,7 +13,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 
 from Utils.gutils import Paths
 from Dataset.dataset import create_loader, Noiseprint_Dataset
-from Model.noiseprint_model import Noise_Print
+from Model.noiseprint_model import Noise_Print, Noise_PrintConst
 from Loss.lossfunction import NP_Loss
 from Engine.engine import Engine
 
@@ -47,7 +47,8 @@ def main():
     ckp_name = f"ckpoint_{ckp_num}.pt"
     model_path = os.path.join(paths.model, ckp_name)
 
-    model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=15)
+    # model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=15)
+    model = Noise_PrintConst(input_shape=[1, 3, 48, 48], num_layers=15)
     if args.ckp_num != 0:
         state = torch.load(model_path, map_location=torch.device("cpu"))
         model.load_state_dict(state['model'])
