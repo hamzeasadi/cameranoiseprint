@@ -45,7 +45,7 @@ class ConstConv(nn.Module):
         zeros = torch.zeros_like(ones)
         zeros[:, self.ks//2, self.ks//2] = 1.0
 
-        return dict(one=ones.unsqueeze(dim=0), zero=zeros.unsqueeze(dim=0))
+        return dict(one=ones.unsqueeze(dim=0).to("cuda"), zero=zeros.unsqueeze(dim=0).to("cuda"))
 
     
 
