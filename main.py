@@ -44,7 +44,7 @@ def main():
 
     
     ckp_num = args.ckp_num
-    ckp_name = f"ckpoint_{ckp_num}.pt"
+    ckp_name = f"ckpointconst_{ckp_num}.pt"
     model_path = os.path.join(paths.model, ckp_name)
 
     # model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=15)
