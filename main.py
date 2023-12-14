@@ -48,7 +48,7 @@ def main():
     model_path = os.path.join(paths.model, ckp_name)
 
     # model = Noise_Print(input_shape=[1, 3, 48, 48], num_layers=15)
-    model = Noise_PrintConst(input_shape=[1, 3, 48, 48], num_layers=15)
+    model = Noise_PrintConst(input_shape=[1, 3, 48, 48], num_layers=15, dev="cuda")
     if args.ckp_num != 0:
         state = torch.load(model_path, map_location=torch.device("cpu"))
         model.load_state_dict(state['model'])
