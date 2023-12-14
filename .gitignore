@@ -134,4 +134,5 @@ dataset.gz.tar
 .DS_Store/
 data/
 practice.py
-
+Config
+Config/
