@@ -41,10 +41,10 @@ class ConstConv(nn.Module):
     
 
     def _get_data(self):
-        ones = torch.ones(size=(self.inch, self.ks, self.ks), dtype=torch.float32)
-        ones[:, self.ks//2, self.ks//2] = 0.0
+        ones = torch.ones(size=(500, self.inch, self.ks, self.ks), dtype=torch.float32)
+        ones[:, :, self.ks//2, self.ks//2] = 0.0
         zeros = torch.zeros_like(ones)
-        zeros[:, self.ks//2, self.ks//2] = 1.0
+        zeros[:, :, self.ks//2, self.ks//2] = 1.0
 
         return dict(one=ones.unsqueeze(dim=0).to(self.dev), zero=zeros.unsqueeze(dim=0).to(self.dev))
 
