@@ -13,8 +13,9 @@ class ConstConv(nn.Module):
     """
     const conv
     """
-    def __init__(self, inch:int, outch:int, ks:int, stride:int, *args, **kwargs) -> None:
+    def __init__(self, inch:int, outch:int, ks:int, stride:int, dev, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.dev = dev
         self.ks = ks
         self.inch = inch
         self.conv0 = nn.Conv2d(in_channels=inch, out_channels=outch, kernel_size=ks, stride=stride, padding=0, bias=False)
@@ -45,7 +46,7 @@ class ConstConv(nn.Module):
         zeros = torch.zeros_like(ones)
         zeros[:, self.ks//2, self.ks//2] = 1.0
 
-        return dict(one=ones.unsqueeze(dim=0).to("cuda"), zero=zeros.unsqueeze(dim=0).to("cuda"))
+        return dict(one=ones.unsqueeze(dim=0).to(self.dev), zero=zeros.unsqueeze(dim=0).to(self.dev))
 
     
 
@@ -105,7 +106,7 @@ class Noise_PrintConst(nn.Module):
     noiseprint module
     """
 
-    def __init__(self, input_shape:List, num_layers:int, *args, **kwargs) -> None:
+    def __init__(self, input_shape:List, num_layers:int, dev,*args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.num_layers = num_layers
 
@@ -114,7 +115,7 @@ class Noise_PrintConst(nn.Module):
         #     nn.ReLU(inplace=True)
         # )
 
-        self.blk0 = ConstConv(inch=3, outch=64, ks=3, stride=1)
+        self.blk0 = ConstConv(inch=3, outch=64, ks=3, stride=1, dev=dev)
 
         self.mid_blk = self._mid_blk()
 
